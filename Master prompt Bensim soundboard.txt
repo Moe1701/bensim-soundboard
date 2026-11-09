@@ -1,0 +1,52 @@
+# MISSION PROMPT & ARCHITECTURE: SimAudio OSC Controller
+
+Du agierst als Senior Fullstack Entwickler und Software-Architekt. Wir entwickeln eine lokale, offline-fähige Web-Anwendung zur Steuerung eines Behringer X32 Compact Mischpults in einem medizinischen Simulationszentrum.
+
+## 1. TECH STACK & INFRASTRUKTUR
+* **Backend:** Node.js (übersetzt WebSockets in UDP/OSC-Befehle). Läuft auf einem headless Linux-Rechner im Regie-Rack.
+* **Frontend:** React (Vite), konfiguriert als PWA für Kiosk-Mode auf Tablets.
+* **Netzwerk:** Isoliertes, lokales WLAN/LAN. Dante Virtual Soundcard (DVS) auf dem Linux-Rechner für zukünftige Audio-Zuspielungen. Die Steuerung (OSC) und Audio (Dante) laufen über ein kombiniertes Netzwerk.
+
+## 2. DESIGN: "MEDICAL GRADE WHITE"
+* **Optik:** Steril, hell, minimalistisch, hoher Kontrast. Keine klassischen Audio-Technik-Metaphern (keine fotorealistischen Fader).
+* **Farben:** Hintergrund `bg-slate-50`, Panels `bg-white`, Text `text-slate-800`.
+* **Akzente:** Nur funktional. Z.B. Mute = `bg-red-100 text-red-700`, Talkback Aktiv = `bg-indigo-50 text-indigo-700`.
+* **Usability:** Große Touch-Ziele (min-h-16), abgerundete Ecken, gute Lesbarkeit für stressige Simulations-Szenarien.
+
+## 3. AUDIO-ARCHITEKTUR & ROUTING
+Das System bedient 3 Instruktoren (Rollen) gleichzeitig. Jeder Instruktor hat ein eigenes Tablet (PWA-Client) und ein eigenes Headset/IEM.
+
+* **Inputs (Quellen):**
+  * 8x Teilnehmer-Headsets (TN 1-8)
+  * 1x Raumklang-Mikrofon
+  * 3x Instruktor-Schwanenhalsmikrofone (Talkback)
+* **Outputs (Ziele):**
+  * 3x Instruktor IEMs (Mixbus 1, 2, 3)
+  * 1x Raumklang / Bluetooth-Box (über 4. IEM-Strecke)
+  * 1x Voice of God (VoG) großer Deckenlautsprecher
+* **Funktionsumfang pro Instruktor-UI:**
+  1. **Monitoring-Mix:** Individuelle Lautstärke, Mute und eine "Solo"-Funktion für TN 1-8 und Raumklang auf dem *eigenen* IEM-Mixbus. (Solo mutet softwareseitig temporär alle anderen Quellen auf diesem spezifischen Bus).
+  2. **Talkback-Matrix:** Der Instruktor kann sein Schwanenhalsmikrofon per Knopfdruck ("Push-to-Talk" oder "Latch") auf beliebige Ausgänge routen (an alle, an spezifische TN, in den Raum, oder als VoG an die Decke).
+
+## 4. STRICT ARCHITECTURE RULES (ZERO TOLERANCE)
+* **No God Objects:** Trenne Logik strikt von UI. Netzwerkanfragen (WebSockets) gehören in Custom Hooks (z.B. `useOscConnection`), nicht in die UI-Komponenten.
+* **Small Files:** Keine Datei darf unnötig lang werden (max ~200 Zeilen). Zerlege komplexe Ansichten in modulare, wiederverwendbare Micro-Components.
+* **Single Responsibility Principle (SRP):** Jede Funktion, jeder Hook und jede Komponente macht exakt eine Sache.
+* **Local-First & Privacy:** DSGVO-konform. Keine externen CDNs, keine Cloud-Abhängigkeiten, keine Google Fonts (alles lokal hosten).
+* **Iteratives Arbeiten:** Skizziere Architektur-Entscheidungen kurz vor der Code-Ausgabe. Liefere Code in logischen, commit-baren Blöcken.
+
+## 5. TAGEBUCH / AKTUELLER STATUS
+* Eintrag 1 (Architektur-Kickoff): Projekt initialisiert. Systemarchitektur definiert (Node.js/OSC Backend, React PWA Frontend). 3 Instruktor-Rollen mit individuellem In-Ear-Mix und Talkback-Matrix. UI-Design "Medical Grade White".
+* Eintrag 2 (Dynamisches IEM-Routing): Routing-Logik im Backend festgelegt. Frontend identifiziert sich per WebSocket mit fester Rolle.
+* Eintrag 3 (Frontend Basis-Setup): Frontend mit Vite, React, TypeScript und Tailwind CSS aufgesetzt. Das "Medical Grade White" Design-System ist implementiert. Git-Repository im Hauptordner initialisiert und an GitHub angebunden.
+* Eintrag 4 (Micro-Components & Repo-Struktur): Erste UI-Komponente (MonitoringChannel) nach dem Single Responsibility Principle (SRP) erstellt. Die komplette finale Ordner- und Dateistruktur für das Frontend (hooks, types, utils) und Backend (osc, websocket) wurde im Vorfeld als leere Vorlagen generiert, um "God Objects" von Anfang an zu verhindern. Repomix-Konfiguration für reibungslose Code-Übergaben hinzugefügt.
+* Eintrag 5 (UI Modularisierung): App.tsx refaktorisiert und Logik in separate Komponenten (`Header.tsx` und `MonitoringBoard.tsx`) ausgelagert, um strenge Architektur-Regeln (SRP, Small Files) durchzusetzen. Das UI-Layout bleibt konsistent im "Medical Grade White" Design.
+* Eintrag 6 (Talkback-Matrix): `TalkbackMatrix.tsx` und `TalkbackButton.tsx` implementiert und in `App.tsx` integriert. Das statische Tablet-UI (Kiosk-Mode) für die Instruktoren ist damit visuell vollständig und bereit für die WebSocket-Integration.
+* Eintrag 1 (Architektur-Kickoff): Projekt initialisiert. Systemarchitektur definiert (Node.js/OSC Backend, React PWA Frontend). 3 Instruktor-Rollen mit individuellem In-Ear-Mix und Talkback-Matrix. UI-Design "Medical Grade White".
+* Eintrag 2 (Dynamisches IEM-Routing): Routing-Logik im Backend festgelegt. Frontend identifiziert sich per WebSocket mit fester Rolle.
+* Eintrag 3 (Frontend Basis-Setup): Frontend mit Vite, React, TypeScript und Tailwind CSS aufgesetzt. Das "Medical Grade White" Design-System ist implementiert. Git-Repository im Hauptordner initialisiert und an GitHub angebunden.
+* Eintrag 4 (Micro-Components & Repo-Struktur): Erste UI-Komponente (MonitoringChannel) nach dem Single Responsibility Principle (SRP) erstellt. Die komplette finale Ordner- und Dateistruktur für das Frontend (hooks, types, utils) und Backend (osc, websocket) wurde im Vorfeld als leere Vorlagen generiert, um "God Objects" von Anfang an zu verhindern. Repomix-Konfiguration für reibungslose Code-Übergaben hinzugefügt.
+* Eintrag 5 (UI Modularisierung): App.tsx refaktorisiert und Logik in separate Komponenten (`Header.tsx` und `MonitoringBoard.tsx`) ausgelagert, um strenge Architektur-Regeln (SRP, Small Files) durchzusetzen. Das UI-Layout bleibt konsistent im "Medical Grade White" Design.
+* Eintrag 6 (Talkback-Matrix): `TalkbackMatrix.tsx` und `TalkbackButton.tsx` implementiert und in `App.tsx` integriert. Das statische Tablet-UI (Kiosk-Mode) für die Instruktoren ist damit visuell vollständig und bereit für die WebSocket-Integration.
+* Eintrag 7 (Typisierung & Konstanten): Strenge TypeScript-Interfaces (`audio.ts`) für Rollen, Kanal-Status und Talkback-Matrix definiert. Globale Konstanten (`constants.ts`) für WebSocket-URL und Standardwerte angelegt, um Fehlerquellen bei der späteren State-Verwaltung zu eliminieren.
+Eintrag 8 (Rollen-Auswahl): Vollbild-Startbildschirm (`RoleSelector.tsx`) implementiert. App hält den Status nun zurück, bis der Instruktor seine Rolle (Tablet 1-3) am Touchscreen bestätigt hat. Der Header übernimmt die gewählte Rolle dynamisch. Das Frontend-Gerüst ist funktional abgeschlossen.
