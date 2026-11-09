@@ -386,7 +386,6 @@ import { useOscConnection } from './hooks/useOscConnection';
 export default function App() {
   const [activeRole, setActiveRole] = useState<InstructorRole | null>(null);
 
-  // Der Hook wird nur aufgerufen, wenn eine Rolle gewählt wurde!
   const { isConnected, sendAudioUpdate } = useOscConnection(
     activeRole as InstructorRole
   );
@@ -397,12 +396,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-8 flex flex-col font-sans select-none overflow-hidden gap-6">
-      {/* Wir geben den isConnected-Status an den Header weiter, um ihn anzuzeigen */}
       <Header role={activeRole} isConnected={isConnected} />
-      
-      {/* Später geben wir sendAudioUpdate an die Boards weiter */}
-      <MonitoringBoard />
-      <TalkbackMatrix />
+      <MonitoringBoard onAudioUpdate={sendAudioUpdate} />
+      <TalkbackMatrix onAudioUpdate={sendAudioUpdate} />
     </div>
   );
 }
