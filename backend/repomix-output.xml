@@ -1,0 +1,329 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+src/
+  osc/
+    x32Client.js
+  websocket/
+    socketHandler.js
+index.js
+package.json
+test-routing.js
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="src/osc/x32Client.js">
+const osc = require('osc');
+
+// ACHTUNG: Die IP-Adresse deines echten X32 Mischpults im Simulationszentrum.
+// Für die Offline-Entwicklung ist das gerade ein Dummy-Wert.
+const X32_IP = '192.168.1.100'; 
+const X32_PORT = 10024; // Standard-Port für X32 OSC
+
+let udpPort;
+
+function initOscClient() {
+  udpPort = new osc.UDPPort({
+    localAddress: "0.0.0.0", // Lauscht auf allen lokalen Netzwerk-Adaptern
+    localPort: 53000,        // Freier Port auf unserem Linux-Backend
+    remoteAddress: X32_IP,
+    remotePort: X32_PORT,
+    metadata: true
+  });
+
+  udpPort.on("error", (err) => {
+    console.error("⚠️ OSC Fehler:", err.message);
+  });
+
+  udpPort.on("ready", () => {
+    console.log(`🎛️  OSC Client bereit. Verbunden mit X32 auf ${X32_IP}:${X32_PORT}`);
+  });
+
+  // UDP-Port öffnen
+  udpPort.open();
+
+  // Wir geben ein Objekt mit Hilfsfunktionen zurück, 
+  // die der WebSocket-Handler später einfach aufrufen kann.
+  return {
+    // Schaltet einen Kanal stumm oder an
+    setMute: (channelAddress, isMuted) => {
+      // X32 Logik: 0 = Mute (Ton aus), 1 = On (Ton an)
+      const value = isMuted ? 0 : 1; 
+      
+      udpPort.send({
+        address: channelAddress, // z.B. /ch/01/mix/on
+        args: [
+          { type: "i", value: value }
+        ]
+      });
+      console.log(`OSC -> ${channelAddress} = ${value} (Int)`);
+    },
+
+    // Setzt die Fader-Lautstärke
+    setFader: (channelAddress, levelPercent) => {
+      // Das Tablet sendet 0-100%, das X32 erwartet Float von 0.0 bis 1.0
+      const oscLevel = levelPercent / 100;
+      
+      udpPort.send({
+        address: channelAddress,
+        args: [
+          { type: "f", value: oscLevel }
+        ]
+      });
+      // console.log-Spam deaktiviert für flüssigere Terminal-Ausgabe
+      // console.log(`OSC -> ${channelAddress} = ${oscLevel} (Float)`);
+    }
+  };
+}
+
+module.exports = { initOscClient };
+</file>
+
+<file path="src/websocket/socketHandler.js">
+// Speichert alle aktiven Verbindungen (welches Tablet hat welche Rolle)
+const connectedClients = new Map(); 
+
+// --- X32 ROUTING MAPS ---
+
+// Welcher Instruktor hört auf welchem Bus?
+const ROLE_TO_BUS = {
+  'instructor-1': '01', // Bus 1
+  'instructor-2': '02', // Bus 2
+  'instructor-3': '03'  // Bus 3
+};
+
+// Welche UI-ID gehört zu welchem physischen Input am Mischpult?
+const CHANNEL_MAP = {
+  'tn1': '/ch/01',
+  'tn2': '/ch/02',
+  'tn3': '/ch/03',
+  'tn4': '/ch/04',
+  'tn5': '/ch/05',
+  'tn6': '/ch/06',
+  'tn7': '/ch/07',
+  'tn8': '/ch/08',
+  'raumL': '/ch/09',
+  'raumR': '/ch/10',
+  'aux1': '/auxin/01' // Hier steckt dein Soundboard
+};
+
+function setupWebSocket(ws, oscClient) {
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message);
+
+      // a) Registrierung
+      if (data.type === 'REGISTER_ROLE') {
+        connectedClients.set(ws, data.role);
+        console.log(`✅ Registriert: ${data.role}. Aktive Tablets: ${connectedClients.size}`);
+        return;
+      }
+
+      // b) Audio-Update
+      if (data.type === 'AUDIO_UPDATE') {
+        const role = connectedClients.get(ws);
+        if (!role) return; 
+
+        const { target, id, property, value, route, active } = data.payload;
+        
+        // Finde heraus, welchen Mixbus dieser Instruktor steuern darf
+        const targetBus = ROLE_TO_BUS[role];
+        
+        if (!targetBus) {
+          console.warn(`⚠️ Keine Bus-Zuweisung für Rolle gefunden: ${role}`);
+          return;
+        }
+
+        // -- X32 OSC MAPPING --
+        
+        if (target === 'channel') {
+          const basePath = CHANNEL_MAP[id];
+          if (!basePath) return;
+
+          // Wir bauen die dynamische X32 Adresse, z.B.: /ch/01/mix/01/level
+          if (property === 'mute') {
+            oscClient.setMute(`${basePath}/mix/${targetBus}/on`, value);
+          } else if (property === 'volume') {
+            oscClient.setFader(`${basePath}/mix/${targetBus}/level`, value);
+          }
+        }
+
+        if (target === 'talkback') {
+          // Talkback heben wir uns für den Feinschliff auf!
+          console.log(`🎙️ Talkback Routing [${route}] -> ${active ? 'AN' : 'AUS'}`);
+        }
+      }
+
+    } catch (error) {
+      console.error('⚠️ Fehler beim Verarbeiten der WebSocket-Nachricht:', error);
+    }
+  });
+
+  // Verbindungsabbruch
+  ws.on('close', () => {
+    const role = connectedClients.get(ws);
+    if (role) {
+      connectedClients.delete(ws);
+      console.log(`❌ Verbindung getrennt: ${role}`);
+    }
+  });
+}
+
+module.exports = { setupWebSocket };
+</file>
+
+<file path="index.js">
+const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
+const path = require('path');
+const { setupWebSocket } = require('./src/websocket/socketHandler');
+const { initOscClient } = require('./src/osc/x32Client');
+
+const PORT = 8080;
+
+console.log('====================================');
+console.log('🎙️ BenSim Soundboard Backend startet');
+console.log('====================================');
+
+// 1. Express & HTTP-Server aufsetzen
+const app = express();
+const server = http.createServer(app);
+
+// 2. Den "dist"-Ordner des Frontends freigeben
+// (Dorthin wird Vite unser React-Projekt bauen)
+const frontendPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendPath));
+
+// Falls eine Route nicht gefunden wird, immer die index.html laden (React-Standard)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+// 3. OSC-Client initialisieren
+const oscClient = initOscClient();
+
+// 4. WebSocket-Server an den HTTP-Server binden
+const wss = new WebSocket.Server({ server });
+
+wss.on('connection', (ws) => {
+  console.log('Neu: Tablet hat sich verbunden.');
+  setupWebSocket(ws, oscClient);
+});
+
+// 5. Server auf allen Netzwerk-Schnittstellen (0.0.0.0) starten
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Web- und WebSocket-Server laufen synchron.`);
+  console.log(`📱 Tablets im WLAN erreichen die App unter: http://<IP-DEINES-RECHNERS>:${PORT}`);
+});
+</file>
+
+<file path="package.json">
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "osc": "^3.6.0",
+    "ws": "^8.18.0"
+  }
+}
+</file>
+
+<file path="test-routing.js">
+const { initOscClient } = require('./src/osc/x32Client');
+
+const oscClient = initOscClient();
+
+const CHANNELS = [
+  '/ch/01', '/ch/02', '/ch/03', '/ch/04', '/ch/05',
+  '/ch/06', '/ch/07', '/ch/08', '/ch/09', '/ch/10',
+  '/auxin/01'
+];
+const BUSES = ['01', '02', '03'];
+
+// Hilfsfunktion zum Pausieren
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function runTest() {
+  console.log('\n🚀 Starte X32 Hardware-Test in 2 Sekunden...');
+  await sleep(2000);
+
+  for (const bus of BUSES) {
+    console.log(`\n====================================`);
+    console.log(`📡 TESTE BUS ${bus} (Instruktor ${parseInt(bus)})`);
+    console.log(`====================================`);
+    
+    for (const ch of CHANNELS) {
+      const address = `${ch}/mix/${bus}/level`;
+      
+      console.log(`➡️ ${address} -> 100%`);
+      oscClient.setFader(address, 100);
+      
+      await sleep(300); // Fader 300ms oben halten
+      
+      oscClient.setFader(address, 0);
+      await sleep(100); // 100ms Pause bis zum nächsten Kanal
+    }
+  }
+  
+  console.log('\n✅ Test-Routine erfolgreich beendet!');
+  console.log('Du kannst das Skript jetzt mit Strg+C abbrechen.');
+  process.exit(0);
+}
+
+// Wir geben dem UDP-Port 500ms Zeit, sich zu öffnen, bevor der Test startet
+setTimeout(runTest, 500);
+</file>
+
+</files>
