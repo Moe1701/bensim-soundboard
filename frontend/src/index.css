@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Basis-Styling für Medical Grade White */
+body {
+  @apply bg-slate-50 text-slate-800;
+}
