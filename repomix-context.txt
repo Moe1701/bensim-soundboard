@@ -1,0 +1,409 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
+
+# File Summary
+
+## Purpose
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+
+## File Format
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  a. A header with the file path (## File: path/to/file)
+  b. The full contents of the file in a code block
+
+## Usage Guidelines
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+
+## Notes
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: frontend/src//*, frontend/tailwind.config.js, frontend/postcss.config.js, frontend/package.json, frontend/index.html, backend//, repomix.config.json
+- Files matching these patterns are excluded: node_modules/, dist/, .git/, package-lock.json, .log
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+
+# Directory Structure
+```
+backend/
+  src/
+    osc/
+      x32Client.js
+    websocket/
+      socketHandler.js
+  index.js
+  package.json
+frontend/
+  src/
+    .gitignore
+    App.tsx
+    index.css
+    main.tsx
+  index.html
+  package.json
+  postcss.config.js
+  tailwind.config.js
+repomix.config.json
+```
+
+# Files
+
+## File: backend/package.json
+```json
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "osc": "^3.6.0",
+    "ws": "^8.18.0"
+  }
+}
+```
+
+## File: frontend/src/.gitignore
+```
+
+```
+
+## File: frontend/src/index.css
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Basis-Styling für Medical Grade White */
+body {
+  @apply bg-slate-50 text-slate-800;
+}
+```
+
+## File: frontend/src/main.tsx
+```typescript
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.tsx'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+```
+
+## File: frontend/index.html
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>frontend</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+## File: frontend/package.json
+```json
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "autoprefixer": "^10.6.2",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.13.0",
+    "postcss": "^8.5.32",
+    "tailwindcss": "^3.4.19",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.6"
+  }
+}
+```
+
+## File: frontend/postcss.config.js
+```javascript
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+```
+
+## File: frontend/tailwind.config.js
+```javascript
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {}, // Die Farben (slate, red, indigo) aus deinem Konzept sind bei Tailwind schon im Standard enthalten!
+  },
+  plugins: [],
+}
+```
+
+## File: repomix.config.json
+```json
+{
+"output": {
+"filePath": "repomix-context.txt",
+"style": "markdown"
+},
+"include": [
+"frontend/src//*",
+"frontend/tailwind.config.js",
+"frontend/postcss.config.js",
+"frontend/package.json",
+"frontend/index.html",
+"backend//",
+"repomix.config.json"
+],
+"ignore": {
+"useGitignore": true,
+"customPatterns": [
+"node_modules/",
+"dist/",
+".git/",
+"package-lock.json",
+".log"
+]
+}
+}
+```
+
+## File: backend/src/osc/x32Client.js
+```javascript
+const osc = require('osc');
+
+// ACHTUNG: Die IP-Adresse deines echten X32 Mischpults im Simulationszentrum.
+// Für die Offline-Entwicklung ist das gerade ein Dummy-Wert.
+const X32_IP = '192.168.1.100'; 
+const X32_PORT = 10024; // Standard-Port für X32 OSC
+
+let udpPort;
+
+function initOscClient() {
+  udpPort = new osc.UDPPort({
+    localAddress: "0.0.0.0", // Lauscht auf allen lokalen Netzwerk-Adaptern
+    localPort: 53000,        // Freier Port auf unserem Linux-Backend
+    remoteAddress: X32_IP,
+    remotePort: X32_PORT,
+    metadata: true
+  });
+
+  udpPort.on("error", (err) => {
+    console.error("⚠️ OSC Fehler:", err.message);
+  });
+
+  udpPort.on("ready", () => {
+    console.log(`🎛️  OSC Client bereit. Verbunden mit X32 auf ${X32_IP}:${X32_PORT}`);
+  });
+
+  // UDP-Port öffnen
+  udpPort.open();
+
+  // Wir geben ein Objekt mit Hilfsfunktionen zurück, 
+  // die der WebSocket-Handler später einfach aufrufen kann.
+  return {
+    // Schaltet einen Kanal stumm oder an
+    setMute: (channelAddress, isMuted) => {
+      // X32 Logik: 0 = Mute (Ton aus), 1 = On (Ton an)
+      const value = isMuted ? 0 : 1; 
+      
+      udpPort.send({
+        address: channelAddress, // z.B. /ch/01/mix/on
+        args: [
+          { type: "i", value: value }
+        ]
+      });
+      console.log(`OSC -> ${channelAddress} = ${value} (Int)`);
+    },
+
+    // Setzt die Fader-Lautstärke
+    setFader: (channelAddress, levelPercent) => {
+      // Das Tablet sendet 0-100%, das X32 erwartet Float von 0.0 bis 1.0
+      const oscLevel = levelPercent / 100;
+      
+      udpPort.send({
+        address: channelAddress, // z.B. /ch/01/mix/fader
+        args: [
+          { type: "f", value: oscLevel }
+        ]
+      });
+      console.log(`OSC -> ${channelAddress} = ${oscLevel} (Float)`);
+    }
+  };
+}
+
+module.exports = { initOscClient };
+```
+
+## File: backend/src/websocket/socketHandler.js
+```javascript
+// Speichert alle aktiven Verbindungen (welches Tablet hat welche Rolle)
+const connectedClients = new Map(); 
+
+function setupWebSocket(ws, oscClient) {
+  // 1. Wenn das Tablet eine Nachricht sendet
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message);
+
+      // a) Das Tablet teilt uns beim Start mit, welche Rolle gewählt wurde
+      if (data.type === 'REGISTER_ROLE') {
+        connectedClients.set(ws, data.role);
+        console.log(`✅ Registriert: ${data.role}. Aktive Tablets: ${connectedClients.size}`);
+        updateRoutingLogic();
+        return;
+      }
+
+      // b) Das Tablet schickt eine Änderung (Fader bewegt, Mute gedrückt)
+      if (data.type === 'AUDIO_UPDATE') {
+        const role = connectedClients.get(ws);
+        if (!role) return; // Ignorieren, falls das Tablet noch keine Rolle hat
+
+        console.log(`[${role}] sendet Audio-Update:`, data.payload);
+        
+        // HIER verbinden wir im nächsten Schritt die Daten mit dem oscClient!
+        // z.B. oscClient.setMute('/ch/01/mix/on', data.payload.isMuted);
+      }
+
+    } catch (error) {
+      console.error('⚠️ Fehler beim Verarbeiten der WebSocket-Nachricht:', error);
+    }
+  });
+
+  // 2. Wenn das Tablet die Verbindung verliert (z.B. WLAN weg oder Browser geschlossen)
+  ws.on('close', () => {
+    const role = connectedClients.get(ws);
+    if (role) {
+      connectedClients.delete(ws);
+      console.log(`❌ Verbindung getrennt: ${role}`);
+      updateRoutingLogic();
+    }
+  });
+}
+
+// Berechnet, wer welchen X32-Mixbus steuert (gemäß Architektur-Tagebuch Eintrag 2)
+function updateRoutingLogic() {
+  const activeRoles = Array.from(connectedClients.values());
+  console.log('🔄 Dynamisches Routing wird neu berechnet. Aktive Rollen:', activeRoles);
+  
+  // Die konkrete Zuweisung (1->1,2,3 etc.) implementieren wir, 
+  // sobald das Frontend erste echte Daten sendet!
+}
+
+module.exports = { setupWebSocket };
+```
+
+## File: backend/index.js
+```javascript
+const WebSocket = require('ws');
+const { setupWebSocket } = require('./src/websocket/socketHandler');
+const { initOscClient } = require('./src/osc/x32Client');
+
+const WS_PORT = 8080;
+
+console.log('====================================');
+console.log('🎙️ BenSim Soundboard Backend startet');
+console.log('====================================');
+
+// 1. OSC-Verbindung zum Behringer X32 aufbauen
+const oscClient = initOscClient();
+
+// 2. WebSocket-Server für die 3 Instruktor-Tablets starten
+const wss = new WebSocket.Server({ port: WS_PORT });
+
+wss.on('connection', (ws) => {
+  console.log('Neu: Tablet hat sich verbunden.');
+  // Delegiert die gesamte Logik für dieses Tablet an unseren Handler
+  setupWebSocket(ws, oscClient);
+});
+
+console.log(`✅ WebSocket-Server lauscht auf ws://localhost:${WS_PORT}`);
+console.log('Warte auf Verbindungen...\n');
+```
+
+## File: frontend/src/App.tsx
+```typescript
+import { useState } from 'react';
+import type { InstructorRole } from './types/audio';
+import { Header } from './components/Header';
+import { MonitoringBoard } from './components/MonitoringBoard';
+import { TalkbackMatrix } from './components/TalkbackMatrix';
+import { RoleSelector } from './components/RoleSelector';
+import { useOscConnection } from './hooks/useOscConnection';
+
+export default function App() {
+  const [activeRole, setActiveRole] = useState<InstructorRole | null>(null);
+
+  // Der Hook wird nur aufgerufen, wenn eine Rolle gewählt wurde!
+  const { isConnected, sendAudioUpdate } = useOscConnection(
+    activeRole as InstructorRole
+  );
+
+  if (!activeRole) {
+    return <RoleSelector onSelectRole={setActiveRole} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 p-4 md:p-8 flex flex-col font-sans select-none overflow-hidden gap-6">
+      {/* Wir geben den isConnected-Status an den Header weiter, um ihn anzuzeigen */}
+      <Header role={activeRole} isConnected={isConnected} />
+      
+      {/* Später geben wir sendAudioUpdate an die Boards weiter */}
+      <MonitoringBoard />
+      <TalkbackMatrix />
+    </div>
+  );
+}
+```

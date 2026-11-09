@@ -1,16 +1,22 @@
 import { useState } from 'react';
 import { TalkbackButton } from './TalkbackButton';
 
-export function TalkbackMatrix() {
-  // Dummy-State, welche Ausgänge gerade für das Talkback aktiviert sind
+interface TalkbackMatrixProps {
+  onAudioUpdate: (payload: any) => void;
+}
+
+export function TalkbackMatrix({ onAudioUpdate }: TalkbackMatrixProps) {
   const [activeRoutes, setActiveRoutes] = useState<string[]>([]);
 
   const toggleRoute = (route: string) => {
-    setActiveRoutes(prev => 
-      prev.includes(route) 
-        ? prev.filter(r => r !== route) 
-        : [...prev, route]
-    );
+    setActiveRoutes(prev => {
+      const isActive = !prev.includes(route);
+      const newState = isActive ? [...prev, route] : prev.filter(r => r !== route);
+      
+      onAudioUpdate({ target: 'talkback', route: route, active: isActive });
+      
+      return newState;
+    });
   };
 
   return (
@@ -19,13 +25,11 @@ export function TalkbackMatrix() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-slate-800">Talkback Routing (Dein Mikrofon)</h2>
         
-        {/* Master PTT-Button (Push To Talk) */}
         <button className="bg-red-50 text-red-700 border-2 border-red-200 px-8 py-3 rounded-xl font-bold text-lg hover:bg-red-100 active:bg-red-200 transition-colors shadow-sm select-none">
           TALK
         </button>
       </div>
 
-      {/* Die Routing-Matrix */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <TalkbackButton 
           label="Voice of God" 
