@@ -1,0 +1,20 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build & Logs
+logs
+*.log
+npm-debug.log*
+
+# OS-spezifisch
+.DS_Store
+Thumbs.db
+
+# Environment Variables (WICHTIG für später, falls wir Passwörter/Ports definieren)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
