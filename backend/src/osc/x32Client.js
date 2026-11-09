@@ -50,12 +50,13 @@ function initOscClient() {
       const oscLevel = levelPercent / 100;
       
       udpPort.send({
-        address: channelAddress, // z.B. /ch/01/mix/fader
+        address: channelAddress,
         args: [
           { type: "f", value: oscLevel }
         ]
       });
-      console.log(`OSC -> ${channelAddress} = ${oscLevel} (Float)`);
+      // console.log-Spam deaktiviert für flüssigere Terminal-Ausgabe
+      // console.log(`OSC -> ${channelAddress} = ${oscLevel} (Float)`);
     }
   };
 }
