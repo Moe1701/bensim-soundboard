@@ -56,3 +56,6 @@ Eintrag 1-8: Architektur, Frontend-UI, Modularisierung und Typisierung abgeschlo
 Eintrag 1-12: Architektur, UI, Modularisierung, WS/OSC-Backend und Echtzeit-Datenfluss implementiert.
 * Eintrag 13: `socketHandler.js` feuert OSC-Befehle an das X32.
 * Eintrag 14 (Frontend Hardware-Sync): `MonitoringBoard.tsx` auf das finale Hardware-Setup des Simulationszentrums skaliert (8x TN, 2x Raum, 1x Aux/Soundboard). Flexbox durch CSS-Grid ersetzt, um alle 11 Kanäle scrollfrei und übersichtlich auf einem Kiosk-Tablet darzustellen. Das Frontend sendet nun die korrekten Kanal-IDs für die anstehende Bus-Routing-Logik.
+Eintrag 1-13: UI, Typisierung, WS-Brücke und Frontend-Kanäle (11 Hardware-Inputs) abgeschlossen.
+* Eintrag 14 (Independent Bus Routing): Die Kernlogik für die In-Ear-Mixe im Backend (`socketHandler.js`) ist implementiert. Das Backend übersetzt die Frontend-Payloads nun abhängig von der Instruktor-Rolle in dedizierte Bus-Sends (Pre-Fader) auf dem X32. Instruktor 1 steuert dynamisch `/mix/01/level`, Instruktor 2 steuert `/mix/02/level` usw. Damit sind die Monitor-Mischungen der Instruktoren vollständig voneinander isoliert und überschreiben nicht den Main-Mix.
+
