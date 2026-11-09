@@ -53,3 +53,6 @@ Eintrag 8 (Rollen-Auswahl): Vollbild-Startbildschirm (`RoleSelector.tsx`) implem
 Eintrag 1-8: Architektur, Frontend-UI, Modularisierung und Typisierung abgeschlossen. React PWA steht visuell.
 * Eintrag 9-10: Backend initialisiert, `x32Client.js` für OSC/UDP-Kommunikation implementiert. 
 * Eintrag 11 (WebSocket Brücke): `socketHandler.js` implementiert. Das Backend kann nun JSON-Nachrichten parsen, Rollen (`REGISTER_ROLE`) registrieren und Verbindungsabbrüche handhaben. Eine globale Map (`connectedClients`) trackt in Echtzeit, welche Instruktoren (Tablets) im Netzwerk aktiv sind, um die Grundlage für das dynamische IEM-Routing (Failover-Logik) aus Eintrag 2 zu schaffen.
+Eintrag 1-12: Architektur, UI, Modularisierung, WS/OSC-Backend und Echtzeit-Datenfluss implementiert.
+* Eintrag 13: `socketHandler.js` feuert OSC-Befehle an das X32.
+* Eintrag 14 (Frontend Hardware-Sync): `MonitoringBoard.tsx` auf das finale Hardware-Setup des Simulationszentrums skaliert (8x TN, 2x Raum, 1x Aux/Soundboard). Flexbox durch CSS-Grid ersetzt, um alle 11 Kanäle scrollfrei und übersichtlich auf einem Kiosk-Tablet darzustellen. Das Frontend sendet nun die korrekten Kanal-IDs für die anstehende Bus-Routing-Logik.

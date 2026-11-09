@@ -1,0 +1,11 @@
+Ganz klare Empfehlung für einen "Set & Forget" Regie-PC: Ubuntu 24.04 LTS (Long Term Support) oder Linux Mint.
+
+Nativer X32-Support: Behringer bietet die Konfigurations-Software "X32-Edit" nativ für Linux an. Wenn du die Desktop-Version von Ubuntu/Mint (mit grafischer Oberfläche) installierst, kannst du bei Problemen jederzeit einen Monitor und eine Maus ans Rack anschließen und hast das gesamte Mischpult visuell vor dir, ohne einen extra Laptop mitbringen zu müssen.
+
+Stabilität: LTS-Versionen sind auf jahrelangen, wartungsfreien Server-Betrieb ausgelegt. Die Kiste bootet, startet im Hintergrund über PM2 automatisch unser Node.js-Backend und läuft danach völlig autark.
+
+Treiber-Ökosystem: Falls du jemals ein USB-Audiointerface für weitere Zuspieler oder ein Elgato Streamdeck an den PC hängen willst, hast du unter Ubuntu/Mint "out of the box" die geringsten Treiber-Hürden.
+
+Wenn der Rechner wirklich nur als unsichtbare "Blackbox" ohne Monitoranschluss im Rack verschraubt wird, reicht auch Ubuntu Server. Das ist extrem ressourcenschonend, wird aber ausschließlich über die Kommandozeile (SSH) bedient (was bedeutet, dass X32-Edit dort nicht läuft). Für ein Simulationszentrum ist die Desktop-Variante als Notfall-Rückfallebene meist die praktischere Wahl.
+
+Da unser Code auf dem perfekten, frischen Stand ist: Was packen wir jetzt an?

@@ -1,0 +1,28 @@
+Du bist ein professioneller Tontechniker und Experte für das Behringer X32 Mischpult. Ich packe gerade ein brandneues X32 aus dem Karton aus und muss es für ein medizinisches Simulationszentrum konfigurieren. 
+
+Wir steuern das X32 "headless" über ein selbst programmiertes Node.js/React-System per OSC (Open Sound Control) über UDP (Port 10024). Das Pult steht im Regie-Raum, die Instruktoren bedienen es über Tablets.
+
+Bitte gib mir eine Schritt-für-Schritt-Anleitung (vom ersten Einschalten und Firmware-Update bis zum fertigen Routing), um exakt folgendes Setup im X32 einzurichten:
+
+1. NETZWERK & REMOTE
+- Das X32 braucht die statische IP: 192.168.1.100 (Subnetz 255.255.255.0, Gateway passend zum Router).
+- OSC über UDP muss aktiviert/erreichbar sein (Remote Control).
+
+2. INPUT-ROUTING (Lokale XLR/Klinken-Eingänge)
+- Kanal 1 bis 8: "TN 1" bis "TN 8" (8 drahtlose Mikrofone der Teilnehmer, XLR In 1-8). Phantomspeisung aus, da Funkstrecken.
+- Kanal 9 und 10: "Raum L" und "Raum R" (2 Deckenmikrofone für Raumklang, XLR In 9-10). Vermutlich 48V Phantomspeisung benötigt.
+- Aux In 1 & 2 (Klinke/Cinch): "Soundboard" (Externes Gerät für medizinische Audio-Einspieler).
+- Kanal 32: "Talkback / Headset" (Das Mikrofon des Instruktors in der Regie, XLR In 32).
+
+3. OUTPUT-ROUTING & BUSSE (Independent In-Ear Mixes)
+Die 3 Instruktoren brauchen komplett unabhängige Mixe (Pre-Fader) auf ihren In-Ear-Strecken.
+- Bus 1: In-Ear Mix Instruktor 1 -> Physischer Output XLR 1
+- Bus 2: In-Ear Mix Instruktor 2 -> Physischer Output XLR 2
+- Bus 3: In-Ear Mix Instruktor 3 -> Physischer Output XLR 3
+
+4. TALKBACK-MATRIX (Voice of God & Raum)
+- Bus 13: "Voice of God" (Deckenlautsprecher im Sim-Raum) -> Physischer Output XLR 13
+- Bus 14: "Raumklang-Lautsprecher" -> Physischer Output XLR 14
+- Wenn der Instruktor sein Mikrofon (Kanal 32) dorthin routet, soll die Stimme aus diesen Outputs kommen.
+
+Bitte erkläre mir ganz genau, in welchen Menüs (Setup, Routing, Channel Config) ich welche Knöpfe und Encoder auf dem X32 drehen muss, um genau dieses Setup als "Scene" abzuspeichern. Schreibe anfängerfreundlich, aber technisch extrem präzise.
