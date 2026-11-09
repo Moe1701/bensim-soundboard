@@ -12,7 +12,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "osc": "^3.6.0",
+    "express": "^5.0.1",
+    "osc": "^2.4.4",
     "ws": "^8.18.0"
   }
 }

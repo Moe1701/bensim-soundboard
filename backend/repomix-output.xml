@@ -232,12 +232,12 @@ const app = express();
 const server = http.createServer(app);
 
 // 2. Den "dist"-Ordner des Frontends freigeben
-// (Dorthin wird Vite unser React-Projekt bauen)
+// (Dorthin wird Vite gleich unser React-Projekt bauen)
 const frontendPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(frontendPath));
 
-// Falls eine Route nicht gefunden wird, immer die index.html laden (React-Standard)
-app.get('*', (req, res) => {
+// Falls eine Route nicht gefunden wird, immer die index.html laden (Express 5.0 Fix)
+app.use((req, res) => {
   res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
@@ -248,14 +248,15 @@ const oscClient = initOscClient();
 const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
-  console.log('Neu: Tablet hat sich verbunden.');
+  console.log('Neu: Tablet (oder Host) hat sich verbunden.');
   setupWebSocket(ws, oscClient);
 });
 
 // 5. Server auf allen Netzwerk-Schnittstellen (0.0.0.0) starten
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Web- und WebSocket-Server laufen synchron.`);
-  console.log(`📱 Tablets im WLAN erreichen die App unter: http://<IP-DEINES-RECHNERS>:${PORT}`);
+  console.log(`✅ Web- und WebSocket-Server laufen synchron auf Port ${PORT}.`);
+  console.log(`🖥️  Lokal am PC testen: http://localhost:${PORT}`);
+  console.log(`📱 Tablets im WLAN: http://<DEINE-PC-IP>:${PORT}`);
 });
 </file>
 
@@ -274,7 +275,8 @@ server.listen(PORT, '0.0.0.0', () => {
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "osc": "^3.6.0",
+    "express": "^5.3.0",
+    "osc": "^2.4.5",
     "ws": "^8.18.0"
   }
 }
