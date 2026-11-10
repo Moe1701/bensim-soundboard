@@ -1,25 +1,25 @@
 {
-"output": {
-"filePath": "repomix-context.txt",
-"style": "markdown"
-},
-"include": [
-"frontend/src//*",
-"frontend/tailwind.config.js",
-"frontend/postcss.config.js",
-"frontend/package.json",
-"frontend/index.html",
-"backend//",
-"repomix.config.json"
-],
-"ignore": {
-"useGitignore": true,
-"customPatterns": [
-"node_modules/",
-"dist/",
-".git/",
-"package-lock.json",
-".log"
-]
-}
+  "output": {
+    "filePath": "repomix-context.txt",
+    "style": "markdown"
+  },
+  "include": [
+    "frontend/src/**/*",
+    "frontend/tailwind.config.js",
+    "frontend/postcss.config.js",
+    "frontend/package.json",
+    "frontend/index.html",
+    "backend/**/*",
+    "repomix.config.json"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "customPatterns": [
+      "node_modules/",
+      "dist/",
+      ".git/",
+      "package-lock.json",
+      "*.log"
+    ]
+  }
 }

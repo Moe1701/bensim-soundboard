@@ -14,7 +14,15 @@ const CHANNEL_MAP = {
   'raumL': '/ch/09', 'raumR': '/ch/10', 'aux1': '/auxin/01'
 };
 
-// --- NEU: TALKBACK MAPS ---
+// --- NEU: MASTER OUTPUT MAP (ZONE B) ---
+const MASTER_MAP = {
+  'out_pat1': '/bus/11',   // In-Ear Schauspieler 1
+  'out_pat2': '/bus/12',   // In-Ear Schauspieler 2
+  'out_vog': '/bus/13',    // Voice of God Deckenlautsprecher
+  'out_sound': '/main/st'  // Soundboard (Aux In) geht direkt auf den L/R Main Mix (Raum)
+};
+
+// --- TALKBACK MAPS (ZONE C) ---
 const INSTRUCTOR_MICS = {
   'instructor-1': '/ch/14',
   'instructor-2': '/ch/15',
@@ -43,12 +51,12 @@ function setupWebSocket(ws, oscClient) {
         if (!role) return; 
 
         const { target, id, property, value, route, active } = data.payload;
-        const targetBus = ROLE_TO_BUS[role];
         
-        if (!targetBus) return;
-
-        // -- X32 OSC MAPPING --
+        // -- ZONE A: MONITORING (IN-EARS) --
         if (target === 'channel') {
+          const targetBus = ROLE_TO_BUS[role];
+          if (!targetBus) return;
+          
           const basePath = CHANNEL_MAP[id];
           if (!basePath) return;
 
@@ -58,24 +66,35 @@ function setupWebSocket(ws, oscClient) {
           else if (property === 'volume') {
             oscClient.setFader(`${basePath}/mix/${targetBus}/level`, value);
           }
-          // NEU: Die Solo-Logik
           else if (property === 'solo') {
             console.log(`🎧 Solo-Modus [${role}] für ${id} -> ${value ? 'AN' : 'AUS'}`);
             
-            // Wir gehen blitzschnell alle 11 Hardware-Kanäle durch
             for (const [chanId, chanPath] of Object.entries(CHANNEL_MAP)) {
               if (chanId !== id) {
-                // Wenn Solo aktiviert wird (value=true) -> Alle anderen stummschalten (Mute=true)
-                // Wenn Solo deaktiviert wird (value=false) -> Alle anderen wieder anmachen (Mute=false)
                 oscClient.setMute(`${chanPath}/mix/${targetBus}/on`, value);
               } else if (value === true) {
-                // Den Solo-Kanal selbst zur Sicherheit immer hörbar machen (Mute=false)
                 oscClient.setMute(`${chanPath}/mix/${targetBus}/on`, false);
               }
             }
           }
         }
 
+        // -- ZONE B: MASTER OUTPUTS (RAUM & SCHAUSPIELER) --
+        if (target === 'master') {
+          const basePath = MASTER_MAP[id];
+          if (!basePath) return;
+
+          // Bei Bussen und Main LR heißt der Fader-Pfad '/mix/fader' (nicht '/mix/level' wie bei Sends)
+          if (property === 'mute') {
+            oscClient.setMute(`${basePath}/mix/on`, value);
+            console.log(`🎚️ Master Mute -> ${id} = ${value ? 'STUMM' : 'AN'}`);
+          } 
+          else if (property === 'volume') {
+            oscClient.setFader(`${basePath}/mix/fader`, value);
+          }
+        }
+
+        // -- ZONE C: TALKBACK MATRIX (PTT) --
         if (target === 'talkback') {
           console.log(`🎙️ Talkback [${role}] -> Route: ${route}, Status: ${active ? 'AN' : 'AUS'}`);
           

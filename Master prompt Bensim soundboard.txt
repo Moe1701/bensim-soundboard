@@ -37,3 +37,7 @@ Das UI teilt sich logisch in drei strikt getrennte Bereiche auf:
 ## 6. X32 OSC-MAPPING (FÜR DAS BACKEND)
 * **Inputs:** /ch/01 bis /ch/08 (TN 1-8), /ch/09-10 (Raum L/R), /ch/14-16 (Instruktor Mics 1-3). Aux In (Soundboard).
 * **Target Mixbusse:** 3 separate In-Ear Busse für Instruktoren, plus dedizierte Busse für VoG, Pat 1, Pat 2 und Raum-Sound.
+Update für die Datei Master prompt Bensim soundboard.txt (Tagebuch)
+Füge diesen Absatz unten in Kapitel 5 (Tagebuch / Aktueller Status) hinzu:
+
+Eintrag 26 (UI/UX Refactoring & Hardware-Testing): Design-Update auf ein kompakteres "Medical Grade White" (angelehnt an das SimObserver-Layout). Whitespace durch reduziertes Padding und verschlankten Header minimiert. Zone A nutzt nun elegante Line-Fader und massiv vergrößerte Kanal-Überschriften für bessere Lesbarkeit. Zone B ist durch smaragdgrüne Fader optisch getrennt. Zone C (Talkback) wurde mit funktionsspezifischen Signalfarben (VoG = Violett, Patienten = Türkis/Grün, Raum = Orange) für intuitive, blinde Bedienung ausgestattet. Die Backend-Testroutine (test-routing.js) wurde komplettiert und testet nun vollumfänglich alle drei Architektur-Zonen (In-Ear Sends, Master Fader und PTT-Mutes) am physischen X32.
