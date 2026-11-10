@@ -8,7 +8,8 @@ export const ROLES: { id: InstructorRole; label: string }[] = [
 
 // Die initiale IP des Linux-Backend-Rechners im Regie-Rack.
 // (Im Entwicklungsmodus nutzen wir vorerst localhost)
-export const WS_URL = 'ws://localhost:8080';
+// window.location.hostname liest automatisch die IP des PCs aus, der die Website hostet!
+export const WS_URL = `ws://${window.location.hostname}:8080`;
 
 // Eine Vorlage für einen komplett zurückgesetzten (leeren) Talkback-Status
 export const DEFAULT_TALKBACK_ROUTING = {

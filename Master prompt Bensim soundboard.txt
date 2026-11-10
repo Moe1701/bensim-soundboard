@@ -3,62 +3,30 @@
 Du agierst als Senior Fullstack Entwickler und Software-Architekt. Wir entwickeln eine lokale, offline-fähige Web-Anwendung zur Steuerung eines Behringer X32 Compact Mischpults in einem medizinischen Simulationszentrum.
 
 ## 1. TECH STACK & INFRASTRUKTUR
-* **Backend:** Node.js (übersetzt WebSockets in UDP/OSC-Befehle). Läuft auf einem headless Linux-Rechner im Regie-Rack.
+* **Backend:** Node.js (übersetzt WebSockets in UDP/OSC-Befehle). Läuft auf headless Linux-Rechner. Express 5.0 liefert Frontend statisch auf Port 8080 aus.
 * **Frontend:** React (Vite), konfiguriert als PWA für Kiosk-Mode auf Tablets.
-* **Netzwerk:** Isoliertes, lokales WLAN/LAN. Dante Virtual Soundcard (DVS) auf dem Linux-Rechner für zukünftige Audio-Zuspielungen. Die Steuerung (OSC) und Audio (Dante) laufen über ein kombiniertes Netzwerk.
+* **Netzwerk & Komfort:** Isoliertes WLAN. Das Backend liest die eigene IP dynamisch aus und generiert beim Start einen ASCII-QR-Code im Terminal, damit Tablets ohne IP-Tippen sofort über die Kamera verbunden werden können.
 
 ## 2. DESIGN: "MEDICAL GRADE WHITE"
-* **Optik:** Steril, hell, minimalistisch, hoher Kontrast. Keine klassischen Audio-Technik-Metaphern (keine fotorealistischen Fader).
-* **Farben:** Hintergrund `bg-slate-50`, Panels `bg-white`, Text `text-slate-800`.
-* **Akzente:** Nur funktional. Z.B. Mute = `bg-red-100 text-red-700`, Talkback Aktiv = `bg-indigo-50 text-indigo-700`.
-* **Usability:** Große Touch-Ziele (min-h-16), abgerundete Ecken, gute Lesbarkeit für stressige Simulations-Szenarien.
+* **Optik:** Steril, hell, minimalistisch, hoher Kontrast. Keine klassischen Audio-Technik-Metaphern.
+* **Farben:** Hintergrund bg-slate-50, Panels bg-white, Text text-slate-800.
 
 ## 3. AUDIO-ARCHITEKTUR & ROUTING
-Das System bedient 3 Instruktoren (Rollen) gleichzeitig. Jeder Instruktor hat ein eigenes Tablet (PWA-Client) und ein eigenes Headset/IEM.
+Das System bedient 3 Instruktoren (Rollen) gleichzeitig.
+* **Monitoring-Mix:** Individuelle Lautstärke, Mute und "Software-Solo" für TN 1-8 und Raumklang auf dem *eigenen* IEM-Mixbus (Software-seitiges Muten aller anderen Kanäle in einer Schleife).
+* **Talkback-Matrix:** Schwanenhalsmikrofone werden per WebSocket-Event auf dedizierte Busse (VoG, Raum, TN) geroutet. Umsetzung als echtes Push-to-Talk (PTT) via Touch-Events (onPointerDown / onPointerUp / onPointerLeave).
 
-* **Inputs (Quellen):**
-  * 8x Teilnehmer-Headsets (TN 1-8)
-  * 1x Raumklang-Mikrofon
-  * 3x Instruktor-Schwanenhalsmikrofone (Talkback)
-* **Outputs (Ziele):**
-  * 3x Instruktor IEMs (Mixbus 1, 2, 3)
-  * 1x Raumklang / Bluetooth-Box (über 4. IEM-Strecke)
-  * 1x Voice of God (VoG) großer Deckenlautsprecher
-* **Funktionsumfang pro Instruktor-UI:**
-  1. **Monitoring-Mix:** Individuelle Lautstärke, Mute und eine "Solo"-Funktion für TN 1-8 und Raumklang auf dem *eigenen* IEM-Mixbus. (Solo mutet softwareseitig temporär alle anderen Quellen auf diesem spezifischen Bus).
-  2. **Talkback-Matrix:** Der Instruktor kann sein Schwanenhalsmikrofon per Knopfdruck ("Push-to-Talk" oder "Latch") auf beliebige Ausgänge routen (an alle, an spezifische TN, in den Raum, oder als VoG an die Decke).
-
-## 4. STRICT ARCHITECTURE RULES (ZERO TOLERANCE)
-* **No God Objects:** Trenne Logik strikt von UI. Netzwerkanfragen (WebSockets) gehören in Custom Hooks (z.B. `useOscConnection`), nicht in die UI-Komponenten.
-* **Small Files:** Keine Datei darf unnötig lang werden (max ~200 Zeilen). Zerlege komplexe Ansichten in modulare, wiederverwendbare Micro-Components.
-* **Single Responsibility Principle (SRP):** Jede Funktion, jeder Hook und jede Komponente macht exakt eine Sache.
-* **Local-First & Privacy:** DSGVO-konform. Keine externen CDNs, keine Cloud-Abhängigkeiten, keine Google Fonts (alles lokal hosten).
-* **Iteratives Arbeiten:** Skizziere Architektur-Entscheidungen kurz vor der Code-Ausgabe. Liefere Code in logischen, commit-baren Blöcken.
+## 4. STRICT ARCHITECTURE RULES
+* **No God Objects:** Logik und UI strikt trennen.
+* **Local-First:** DSGVO-konform, keine CDNs, keine Cloud, keine Google Fonts.
 
 ## 5. TAGEBUCH / AKTUELLER STATUS
-* Eintrag 1 (Architektur-Kickoff): Projekt initialisiert. Systemarchitektur definiert (Node.js/OSC Backend, React PWA Frontend). 3 Instruktor-Rollen mit individuellem In-Ear-Mix und Talkback-Matrix. UI-Design "Medical Grade White".
-* Eintrag 2 (Dynamisches IEM-Routing): Routing-Logik im Backend festgelegt. Frontend identifiziert sich per WebSocket mit fester Rolle.
-* Eintrag 3 (Frontend Basis-Setup): Frontend mit Vite, React, TypeScript und Tailwind CSS aufgesetzt. Das "Medical Grade White" Design-System ist implementiert. Git-Repository im Hauptordner initialisiert und an GitHub angebunden.
-* Eintrag 4 (Micro-Components & Repo-Struktur): Erste UI-Komponente (MonitoringChannel) nach dem Single Responsibility Principle (SRP) erstellt. Die komplette finale Ordner- und Dateistruktur für das Frontend (hooks, types, utils) und Backend (osc, websocket) wurde im Vorfeld als leere Vorlagen generiert, um "God Objects" von Anfang an zu verhindern. Repomix-Konfiguration für reibungslose Code-Übergaben hinzugefügt.
-* Eintrag 5 (UI Modularisierung): App.tsx refaktorisiert und Logik in separate Komponenten (`Header.tsx` und `MonitoringBoard.tsx`) ausgelagert, um strenge Architektur-Regeln (SRP, Small Files) durchzusetzen. Das UI-Layout bleibt konsistent im "Medical Grade White" Design.
-* Eintrag 6 (Talkback-Matrix): `TalkbackMatrix.tsx` und `TalkbackButton.tsx` implementiert und in `App.tsx` integriert. Das statische Tablet-UI (Kiosk-Mode) für die Instruktoren ist damit visuell vollständig und bereit für die WebSocket-Integration.
-* Eintrag 1 (Architektur-Kickoff): Projekt initialisiert. Systemarchitektur definiert (Node.js/OSC Backend, React PWA Frontend). 3 Instruktor-Rollen mit individuellem In-Ear-Mix und Talkback-Matrix. UI-Design "Medical Grade White".
-* Eintrag 2 (Dynamisches IEM-Routing): Routing-Logik im Backend festgelegt. Frontend identifiziert sich per WebSocket mit fester Rolle.
-* Eintrag 3 (Frontend Basis-Setup): Frontend mit Vite, React, TypeScript und Tailwind CSS aufgesetzt. Das "Medical Grade White" Design-System ist implementiert. Git-Repository im Hauptordner initialisiert und an GitHub angebunden.
-* Eintrag 4 (Micro-Components & Repo-Struktur): Erste UI-Komponente (MonitoringChannel) nach dem Single Responsibility Principle (SRP) erstellt. Die komplette finale Ordner- und Dateistruktur für das Frontend (hooks, types, utils) und Backend (osc, websocket) wurde im Vorfeld als leere Vorlagen generiert, um "God Objects" von Anfang an zu verhindern. Repomix-Konfiguration für reibungslose Code-Übergaben hinzugefügt.
-* Eintrag 5 (UI Modularisierung): App.tsx refaktorisiert und Logik in separate Komponenten (`Header.tsx` und `MonitoringBoard.tsx`) ausgelagert, um strenge Architektur-Regeln (SRP, Small Files) durchzusetzen. Das UI-Layout bleibt konsistent im "Medical Grade White" Design.
-* Eintrag 6 (Talkback-Matrix): `TalkbackMatrix.tsx` und `TalkbackButton.tsx` implementiert und in `App.tsx` integriert. Das statische Tablet-UI (Kiosk-Mode) für die Instruktoren ist damit visuell vollständig und bereit für die WebSocket-Integration.
-* Eintrag 7 (Typisierung & Konstanten): Strenge TypeScript-Interfaces (`audio.ts`) für Rollen, Kanal-Status und Talkback-Matrix definiert. Globale Konstanten (`constants.ts`) für WebSocket-URL und Standardwerte angelegt, um Fehlerquellen bei der späteren State-Verwaltung zu eliminieren.
-Eintrag 8 (Rollen-Auswahl): Vollbild-Startbildschirm (`RoleSelector.tsx`) implementiert. App hält den Status nun zurück, bis der Instruktor seine Rolle (Tablet 1-3) am Touchscreen bestätigt hat. Der Header übernimmt die gewählte Rolle dynamisch. Das Frontend-Gerüst ist funktional abgeschlossen.
-Eintrag 1-8: Architektur, Frontend-UI, Modularisierung und Typisierung abgeschlossen. React PWA steht visuell.
-* Eintrag 9-10: Backend initialisiert, `x32Client.js` für OSC/UDP-Kommunikation implementiert. 
-* Eintrag 11 (WebSocket Brücke): `socketHandler.js` implementiert. Das Backend kann nun JSON-Nachrichten parsen, Rollen (`REGISTER_ROLE`) registrieren und Verbindungsabbrüche handhaben. Eine globale Map (`connectedClients`) trackt in Echtzeit, welche Instruktoren (Tablets) im Netzwerk aktiv sind, um die Grundlage für das dynamische IEM-Routing (Failover-Logik) aus Eintrag 2 zu schaffen.
-Eintrag 1-12: Architektur, UI, Modularisierung, WS/OSC-Backend und Echtzeit-Datenfluss implementiert.
-* Eintrag 13: `socketHandler.js` feuert OSC-Befehle an das X32.
-* Eintrag 14 (Frontend Hardware-Sync): `MonitoringBoard.tsx` auf das finale Hardware-Setup des Simulationszentrums skaliert (8x TN, 2x Raum, 1x Aux/Soundboard). Flexbox durch CSS-Grid ersetzt, um alle 11 Kanäle scrollfrei und übersichtlich auf einem Kiosk-Tablet darzustellen. Das Frontend sendet nun die korrekten Kanal-IDs für die anstehende Bus-Routing-Logik.
-Eintrag 1-13: UI, Typisierung, WS-Brücke und Frontend-Kanäle (11 Hardware-Inputs) abgeschlossen.
-* Eintrag 14 (Independent Bus Routing): Die Kernlogik für die In-Ear-Mixe im Backend (`socketHandler.js`) ist implementiert. Das Backend übersetzt die Frontend-Payloads nun abhängig von der Instruktor-Rolle in dedizierte Bus-Sends (Pre-Fader) auf dem X32. Instruktor 1 steuert dynamisch `/mix/01/level`, Instruktor 2 steuert `/mix/02/level` usw. Damit sind die Monitor-Mischungen der Instruktoren vollständig voneinander isoliert und überschreiben nicht den Main-Mix.
-Eintrag 1-13: UI, Typisierung, WS-Brücke, Hardware-Mapping und Backend (OSC/UDP) abgeschlossen.
-* Eintrag 14 (Independent Bus Routing): Die Kernlogik für die In-Ear-Mixe im Backend (`socketHandler.js`) ist implementiert. Das Backend übersetzt die Frontend-Payloads nun abhängig von der Instruktor-Rolle in dedizierte Bus-Sends (Pre-Fader) auf dem X32.
-* Eintrag 15 (Hardware-Test): Ein automatisiertes Test-Skript (`test-routing.js`) wurde erstellt, um das korrekte Kanal- und Bus-Routing (11 Channels auf 3 Busse) auf dem X32 ohne Frontend-Interaktion visuell zu verifizieren. Die console.log-Ausgabe im OSC-Client wurde für den Live-Betrieb stummgeschaltet.
-* Aktueller Meilenstein: Das Backend übersetzt fehlerfrei Frontend-Aktionen in zielgerichtete OSC-Befehle (`/ch/xx/mix/yy/level`).
+* Eintrag 1-17: Architektur, UI, WS/OSC-Backend, Appliance Mode (Express) und dynamische Host-IP etabliert.
+* Eintrag 18 (Routing-Vollendung): Software-Solo und Talkback-Routing vollständig im Backend implementiert. 
+* Eintrag 19 (Dev-Komfort): QR-Code Terminal-Ausgabe implementiert, um Tablets blitzschnell für Hardware-Tests einzubinden.
+* Eintrag 20 (Talkback UX): Push-to-Talk (PTT) für die Talkback-Matrix im Frontend (Touch-Events) und Backend implementiert.
+
+## 6. X32 OSC-MAPPING (FÜR DAS BACKEND)
+Das Backend sendet Befehle an folgende X32-Adressen (muss mit der physischen Pult-Szene synchron sein):
+* **Inputs:** /ch/01 bis /ch/08 (TN 1-8), /ch/09-10 (Raum L/R), /auxin/01 (Soundboard), /ch/14-16 (Instruktor Mics 1-3).
+* **Target Mixbusse (Pre-Fader):** /mix/01 bis 03 (IEM Instruktoren), /mix/13 (VoG), /mix/14 (Raum).

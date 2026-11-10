@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 interface MonitoringChannelProps {
   label: string;
   volume: number;
@@ -17,6 +19,16 @@ export function MonitoringChannel({
   onToggleMute,
   onToggleSolo,
 }: MonitoringChannelProps) {
+  
+  // Das "Klebeband" nutzt den LocalStorage, damit die Namen beim Neuladen bleiben
+  const [tapeLabel, setTapeLabel] = useState(() => {
+    return localStorage.getItem(`tape-${label}`) || '';
+  });
+
+  useEffect(() => {
+    localStorage.setItem(`tape-${label}`, tapeLabel);
+  }, [tapeLabel, label]);
+
   return (
     <div className="flex flex-col items-center bg-white border border-slate-200 rounded-2xl p-3 shadow-sm w-full min-w-[80px] max-w-[120px] mx-auto">
       <div className="text-slate-800 font-bold mb-4 text-sm md:text-base tracking-wide">{label}</div>
@@ -54,6 +66,19 @@ export function MonitoringChannel({
         >
           SOLO
         </button>
+      </div>
+
+      {/* Das analoge Klebeband */}
+      <div className="w-full mt-3 pt-3 border-t border-slate-100">
+        <input
+          type="text"
+          value={tapeLabel}
+          onChange={(e) => setTapeLabel(e.target.value)}
+          placeholder="Wer?"
+          maxLength={12}
+          className="w-full bg-[#fef08a] text-slate-800 font-mono text-center text-xs md:text-sm font-bold py-1 px-1 shadow-sm outline-none focus:ring-2 focus:ring-amber-500 placeholder:text-amber-700/40"
+          style={{ transform: 'rotate(-1deg)' }}
+        />
       </div>
     </div>
   );

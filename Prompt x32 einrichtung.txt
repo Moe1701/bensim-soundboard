@@ -1,6 +1,6 @@
-Du bist ein professioneller Tontechniker und Experte für das Behringer X32 Mischpult. Ich packe gerade ein brandneues X32 aus dem Karton aus und muss es für ein medizinisches Simulationszentrum konfigurieren. 
+Du bist ein professioneller Tontechniker und Experte für das Behringer X32 Mischpult. Ich packe gerade ein brandneues X32 Compact (Achtung: Compact-Version mit nur 16 lokalen XLR-Eingängen und 8 lokalen XLR-Ausgängen!) aus dem Karton aus und muss es für ein medizinisches Simulationszentrum konfigurieren.
 
-Wir steuern das X32 "headless" über ein selbst programmiertes Node.js/React-System per OSC (Open Sound Control) über UDP (Port 10024). Das Pult steht im Regie-Raum, die Instruktoren bedienen es über Tablets.
+Wir steuern das X32 "headless" über ein selbst programmiertes Node.js/React-System per OSC (Open Sound Control) über UDP (Port 10024). Das Pult steht im Regie-Raum, die 3 Instruktoren bedienen es über Tablets. Jeder Instruktor hat sein eigenes Headset-Mikrofon, um unabhängig agieren zu können.
 
 Bitte gib mir eine Schritt-für-Schritt-Anleitung (vom ersten Einschalten und Firmware-Update bis zum fertigen Routing), um exakt folgendes Setup im X32 einzurichten:
 
@@ -9,10 +9,11 @@ Bitte gib mir eine Schritt-für-Schritt-Anleitung (vom ersten Einschalten und Fi
 - OSC über UDP muss aktiviert/erreichbar sein (Remote Control).
 
 2. INPUT-ROUTING (Lokale XLR/Klinken-Eingänge)
-- Kanal 1 bis 8: "TN 1" bis "TN 8" (8 drahtlose Mikrofone der Teilnehmer, XLR In 1-8). Phantomspeisung aus, da Funkstrecken.
-- Kanal 9 und 10: "Raum L" und "Raum R" (2 Deckenmikrofone für Raumklang, XLR In 9-10). Vermutlich 48V Phantomspeisung benötigt.
+Da das Compact physisch 16 XLR-Eingänge hat, stecken wir wie folgt:
+- Kanal 1 bis 8: "TN 1" bis "TN 8" (8 drahtlose Mikrofone der Teilnehmer, physisch in XLR In 1-8). Phantomspeisung aus, da Funkstrecken.
+- Kanal 9 und 10: "Raum L" und "Raum R" (2 Deckenmikrofone für Raumklang, physisch in XLR In 9-10). Vermutlich 48V Phantomspeisung benötigt.
 - Aux In 1 & 2 (Klinke/Cinch): "Soundboard" (Externes Gerät für medizinische Audio-Einspieler).
-- Kanal 32: "Talkback / Headset" (Das Mikrofon des Instruktors in der Regie, XLR In 32).
+- Kanal 14, 15 und 16: "Instruktor 1, 2 und 3" (Die 3 separaten Mikrofone der Instruktoren in der Regie, physisch in XLR In 14, 15 und 16).
 
 3. OUTPUT-ROUTING & BUSSE (Independent In-Ear Mixes)
 Die 3 Instruktoren brauchen komplett unabhängige Mixe (Pre-Fader) auf ihren In-Ear-Strecken.
@@ -21,8 +22,13 @@ Die 3 Instruktoren brauchen komplett unabhängige Mixe (Pre-Fader) auf ihren In-
 - Bus 3: In-Ear Mix Instruktor 3 -> Physischer Output XLR 3
 
 4. TALKBACK-MATRIX (Voice of God & Raum)
-- Bus 13: "Voice of God" (Deckenlautsprecher im Sim-Raum) -> Physischer Output XLR 13
-- Bus 14: "Raumklang-Lautsprecher" -> Physischer Output XLR 14
-- Wenn der Instruktor sein Mikrofon (Kanal 32) dorthin routet, soll die Stimme aus diesen Outputs kommen.
+- Bus 13: "Voice of God" (Deckenlautsprecher im Sim-Raum) -> Physischer Output XLR 4
+- Bus 14: "Raumklang-Lautsprecher" -> Physischer Output XLR 5
+- Wenn die Instruktoren ihre Mikrofone (Kanäle 14, 15, 16) dorthin routen, soll die Stimme aus diesen Outputs kommen.
 
-Bitte erkläre mir ganz genau, in welchen Menüs (Setup, Routing, Channel Config) ich welche Knöpfe und Encoder auf dem X32 drehen muss, um genau dieses Setup als "Scene" abzuspeichern. Schreibe anfängerfreundlich, aber technisch extrem präzise.
+5. EQUALIZER & LOW CUT (Signalbereinigung)
+Um das Signal optimal aufzubereiten, müssen die Inputs einmalig fest per EQ bereinigt und in der Szene gespeichert werden (Set & Forget):
+- Für alle Mikrofon-Kanäle (1-10 und 14-16): Bitte erkläre mir, wie ich den Low Cut (High Pass Filter / HPF) aktiviere und auf ca. 100-120 Hz einstelle, um Trittschall zu filtern.
+- Bitte erkläre mir, wie ich im Kanal-EQ (High-Band) extreme, schrille Höhen leicht absenke (z. B. High Shelf ab 8-10 kHz).
+
+Bitte erkläre mir ganz genau, in welchen Menüs (Setup, Routing, Channel Config) ich welche Knöpfe und Encoder auf dem X32 Compact drehen muss, um genau dieses Setup als "Scene" abzuspeichern. Schreibe anfängerfreundlich, aber technisch extrem präzise.

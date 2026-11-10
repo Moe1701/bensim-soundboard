@@ -1,0 +1,32 @@
+Du bist ein Senior Linux Systemadministrator und DevOps-Experte. Ich baue gerade einen dedizierten, "headless" (ohne Monitor) Linux-Rechner für ein medizinisches Simulationszentrum auf. Der Rechner steht im Regie-Rack und fungiert als geschlossene "Appliance".
+
+Auf dem Rechner läuft ein lokales Node.js-Backend (Express 5.0 Server + WebSockets auf Port 8080), das eine React-PWA hostet und OSC-Befehle (UDP) an ein Behringer X32 Mischpult sendet.
+
+Bitte erstelle mir eine anfängerfreundliche, aber technisch extrem präzise Schritt-für-Schritt-Anleitung mit allen Terminal-Befehlen für folgende Einrichtung:
+
+1. OS IDENTIFIKATION & BASIS-SETUP
+- Auf dem Rechner ist bereits irgendein Linux installiert, das ca. 2 Jahre alt ist. Ich weiß aber nicht, welche Distribution (Ubuntu, Debian, etc.) oder Version es ist.
+- Mit welchen Befehlen finde ich über das Terminal exakt heraus, was installiert ist?
+- Was empfiehlst du für den extrem stabilen Dauerbetrieb einer Appliance: Ein Upgrade des alten Systems oder eine saubere Neuinstallation (z. B. auf Ubuntu Server 24.04 LTS)? Bitte gib mir für deinen Favoriten die nötigen Schritte oder Upgrade-Befehle.
+
+2. NETZWERK & FIREWALL (UFW)
+- Der Rechner braucht eine feste, statische IP in einem isolierten Netzwerk (z. B. 192.168.1.10, Subnetz 255.255.255.0, Gateway 192.168.1.1).
+- Die Firewall muss streng konfiguriert werden. Freigegeben werden müssen:
+  - SSH (Port 22) für Fernwartung.
+  - TCP Port 8080 (Für den Express Webserver und die WebSockets der Tablets).
+  - UDP Port 53000 (Der ausgehende/eingehende Port unseres OSC-Clients).
+  - Alles andere soll blockiert werden.
+
+3. NODE.JS & GIT INSTALLATION
+- Wie installiere ich die aktuelle Node.js Version (v24.x) sauber über NodeSource?
+- Wie installiere ich Git, um mein privates GitHub-Repository (mit dem fertigen Code) auf den Rechner zu klonen?
+
+4. AUTOSTART ALS SYSTEMDIENST (PM2)
+- Das Node.js-Backend (liegt im Ordner /backend/index.js) muss absolut ausfallsicher laufen.
+- Wie richte ich PM2 so ein, dass der Server beim Hochfahren des Rechners vollautomatisch im Hintergrund startet, noch bevor sich ein Benutzer anmeldet?
+- Wie lese ich die Logs von PM2 aus, falls ich Fehler suchen muss?
+
+5. DANTE VIRTUAL SOUNDCARD (LINUX)
+- Später soll Dante Virtual Soundcard auf dem System laufen. Gibt es Besonderheiten, die ich beachten muss, wenn ich DVS auf einem headless Linux-System für Audio-Routing nutzen möchte?
+
+Bitte halte die Linux-Befehle exakt und kopierbar. Gehe davon aus, dass ich per SSH auf dem Rechner eingeloggt bin.

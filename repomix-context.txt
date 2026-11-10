@@ -44,6 +44,7 @@ backend/
       socketHandler.js
   index.js
   package.json
+  test-routing.js
 frontend/
   src/
     .gitignore
@@ -59,26 +60,51 @@ repomix.config.json
 
 # Files
 
-## File: backend/package.json
-```json
-{
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "dev": "node --watch index.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "osc": "^3.6.0",
-    "ws": "^8.18.0"
+## File: backend/test-routing.js
+```javascript
+const { initOscClient } = require('./src/osc/x32Client');
+
+const oscClient = initOscClient();
+
+const CHANNELS = [
+  '/ch/01', '/ch/02', '/ch/03', '/ch/04', '/ch/05',
+  '/ch/06', '/ch/07', '/ch/08', '/ch/09', '/ch/10',
+  '/auxin/01'
+];
+const BUSES = ['01', '02', '03'];
+
+// Hilfsfunktion zum Pausieren
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function runTest() {
+  console.log('\n🚀 Starte X32 Hardware-Test in 2 Sekunden...');
+  await sleep(2000);
+
+  for (const bus of BUSES) {
+    console.log(`\n====================================`);
+    console.log(`📡 TESTE BUS ${bus} (Instruktor ${parseInt(bus)})`);
+    console.log(`====================================`);
+    
+    for (const ch of CHANNELS) {
+      const address = `${ch}/mix/${bus}/level`;
+      
+      console.log(`➡️ ${address} -> 100%`);
+      oscClient.setFader(address, 100);
+      
+      await sleep(300); // Fader 300ms oben halten
+      
+      oscClient.setFader(address, 0);
+      await sleep(100); // 100ms Pause bis zum nächsten Kanal
+    }
   }
+  
+  console.log('\n✅ Test-Routine erfolgreich beendet!');
+  console.log('Du kannst das Skript jetzt mit Strg+C abbrechen.');
+  process.exit(0);
 }
+
+// Wir geben dem UDP-Port 500ms Zeit, sich zu öffnen, bevor der Test startet
+setTimeout(runTest, 500);
 ```
 
 ## File: frontend/src/.gitignore
@@ -220,6 +246,29 @@ export default {
 }
 ```
 
+## File: backend/package.json
+```json
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.0.1",
+    "osc": "^2.4.4",
+    "ws": "^8.18.0"
+  }
+}
+```
+
 ## File: backend/src/osc/x32Client.js
 ```javascript
 const osc = require('osc');
@@ -274,12 +323,13 @@ function initOscClient() {
       const oscLevel = levelPercent / 100;
       
       udpPort.send({
-        address: channelAddress, // z.B. /ch/01/mix/fader
+        address: channelAddress,
         args: [
           { type: "f", value: oscLevel }
         ]
       });
-      console.log(`OSC -> ${channelAddress} = ${oscLevel} (Float)`);
+      // console.log-Spam deaktiviert für flüssigere Terminal-Ausgabe
+      // console.log(`OSC -> ${channelAddress} = ${oscLevel} (Float)`);
     }
   };
 }
@@ -292,29 +342,72 @@ module.exports = { initOscClient };
 // Speichert alle aktiven Verbindungen (welches Tablet hat welche Rolle)
 const connectedClients = new Map(); 
 
+// --- X32 ROUTING MAPS ---
+const ROLE_TO_BUS = {
+  'instructor-1': '01', // Bus 1
+  'instructor-2': '02', // Bus 2
+  'instructor-3': '03'  // Bus 3
+};
+
+const CHANNEL_MAP = {
+  'tn1': '/ch/01', 'tn2': '/ch/02', 'tn3': '/ch/03', 'tn4': '/ch/04',
+  'tn5': '/ch/05', 'tn6': '/ch/06', 'tn7': '/ch/07', 'tn8': '/ch/08',
+  'raumL': '/ch/09', 'raumR': '/ch/10', 'aux1': '/auxin/01'
+};
+
 function setupWebSocket(ws, oscClient) {
-  // 1. Wenn das Tablet eine Nachricht sendet
   ws.on('message', (message) => {
     try {
       const data = JSON.parse(message);
 
-      // a) Das Tablet teilt uns beim Start mit, welche Rolle gewählt wurde
       if (data.type === 'REGISTER_ROLE') {
         connectedClients.set(ws, data.role);
         console.log(`✅ Registriert: ${data.role}. Aktive Tablets: ${connectedClients.size}`);
-        updateRoutingLogic();
         return;
       }
 
-      // b) Das Tablet schickt eine Änderung (Fader bewegt, Mute gedrückt)
       if (data.type === 'AUDIO_UPDATE') {
         const role = connectedClients.get(ws);
-        if (!role) return; // Ignorieren, falls das Tablet noch keine Rolle hat
+        if (!role) return; 
 
-        console.log(`[${role}] sendet Audio-Update:`, data.payload);
+        const { target, id, property, value, route, active } = data.payload;
+        const targetBus = ROLE_TO_BUS[role];
         
-        // HIER verbinden wir im nächsten Schritt die Daten mit dem oscClient!
-        // z.B. oscClient.setMute('/ch/01/mix/on', data.payload.isMuted);
+        if (!targetBus) return;
+
+        // -- X32 OSC MAPPING --
+        if (target === 'channel') {
+          const basePath = CHANNEL_MAP[id];
+          if (!basePath) return;
+
+          if (property === 'mute') {
+            oscClient.setMute(`${basePath}/mix/${targetBus}/on`, value);
+          } 
+          else if (property === 'volume') {
+            oscClient.setFader(`${basePath}/mix/${targetBus}/level`, value);
+          }
+          // NEU: Die Solo-Logik
+          else if (property === 'solo') {
+            console.log(`🎧 Solo-Modus [${role}] für ${id} -> ${value ? 'AN' : 'AUS'}`);
+            
+            // Wir gehen blitzschnell alle 11 Hardware-Kanäle durch
+            for (const [chanId, chanPath] of Object.entries(CHANNEL_MAP)) {
+              if (chanId !== id) {
+                // Wenn Solo aktiviert wird (value=true) -> Alle anderen stummschalten (Mute=true)
+                // Wenn Solo deaktiviert wird (value=false) -> Alle anderen wieder anmachen (Mute=false)
+                oscClient.setMute(`${chanPath}/mix/${targetBus}/on`, value);
+              } else if (value === true) {
+                // Den Solo-Kanal selbst zur Sicherheit immer hörbar machen (Mute=false)
+                oscClient.setMute(`${chanPath}/mix/${targetBus}/on`, false);
+              }
+            }
+          }
+        }
+
+        if (target === 'talkback') {
+          // Platzhalter für den nächsten Schritt!
+          console.log(`🎙️ Talkback Routing [${route}] -> ${active ? 'AN' : 'AUS'}`);
+        }
       }
 
     } catch (error) {
@@ -322,24 +415,13 @@ function setupWebSocket(ws, oscClient) {
     }
   });
 
-  // 2. Wenn das Tablet die Verbindung verliert (z.B. WLAN weg oder Browser geschlossen)
   ws.on('close', () => {
     const role = connectedClients.get(ws);
     if (role) {
       connectedClients.delete(ws);
       console.log(`❌ Verbindung getrennt: ${role}`);
-      updateRoutingLogic();
     }
   });
-}
-
-// Berechnet, wer welchen X32-Mixbus steuert (gemäß Architektur-Tagebuch Eintrag 2)
-function updateRoutingLogic() {
-  const activeRoles = Array.from(connectedClients.values());
-  console.log('🔄 Dynamisches Routing wird neu berechnet. Aktive Rollen:', activeRoles);
-  
-  // Die konkrete Zuweisung (1->1,2,3 etc.) implementieren wir, 
-  // sobald das Frontend erste echte Daten sendet!
 }
 
 module.exports = { setupWebSocket };
@@ -347,30 +429,65 @@ module.exports = { setupWebSocket };
 
 ## File: backend/index.js
 ```javascript
+const express = require('express');
+const http = require('http');
 const WebSocket = require('ws');
+const path = require('path');
+const os = require('os');
+const qrcode = require('qrcode-terminal'); // NEU: QR Code Generator
 const { setupWebSocket } = require('./src/websocket/socketHandler');
 const { initOscClient } = require('./src/osc/x32Client');
 
-const WS_PORT = 8080;
+const PORT = 8080;
+
+// Hilfsfunktion: Findet die WLAN/LAN IP-Adresse deines PCs
+function getLocalIp() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return 'localhost';
+}
+
+const localIp = getLocalIp();
+const tabletUrl = `http://${localIp}:${PORT}`;
 
 console.log('====================================');
 console.log('🎙️ BenSim Soundboard Backend startet');
 console.log('====================================');
 
-// 1. OSC-Verbindung zum Behringer X32 aufbauen
-const oscClient = initOscClient();
+const app = express();
+const server = http.createServer(app);
 
-// 2. WebSocket-Server für die 3 Instruktor-Tablets starten
-const wss = new WebSocket.Server({ port: WS_PORT });
+const frontendPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendPath));
+
+app.use((req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+const oscClient = initOscClient();
+const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
-  console.log('Neu: Tablet hat sich verbunden.');
-  // Delegiert die gesamte Logik für dieses Tablet an unseren Handler
+  console.log('Neu: Tablet (oder Host) hat sich verbunden.');
   setupWebSocket(ws, oscClient);
 });
 
-console.log(`✅ WebSocket-Server lauscht auf ws://localhost:${WS_PORT}`);
-console.log('Warte auf Verbindungen...\n');
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server laufen synchron auf Port ${PORT}.`);
+  console.log(`🖥️  Host-PC: http://localhost:${PORT}`);
+  console.log(`📱 Tablets: ${tabletUrl}`);
+  
+  // NEU: QR-Code im Terminal ausgeben
+  console.log('\n--- SCAN MICH FÜR TABLET-ZUGANG ---');
+  qrcode.generate(tabletUrl, { small: true });
+  console.log('====================================\n');
+});
 ```
 
 ## File: frontend/src/App.tsx

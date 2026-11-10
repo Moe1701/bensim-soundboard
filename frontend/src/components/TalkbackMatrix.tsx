@@ -1,58 +1,61 @@
-import { useState } from 'react';
-import { TalkbackButton } from './TalkbackButton';
+import { useState, useCallback } from 'react';
 
 interface TalkbackMatrixProps {
-  onAudioUpdate: (payload: any) => void;
+  onAudioUpdate: (update: any) => void;
 }
 
-export function TalkbackMatrix({ onAudioUpdate }: TalkbackMatrixProps) {
-  const [activeRoutes, setActiveRoutes] = useState<string[]>([]);
+const DESTINATIONS = [
+  { id: 'vog', label: 'Voice of God' },
+  { id: 'room', label: 'Raumklang' },
+  { id: 'tn', label: 'Alle TN (IEM)' },
+];
 
-  const toggleRoute = (route: string) => {
-    setActiveRoutes(prev => {
-      const isActive = !prev.includes(route);
-      const newState = isActive ? [...prev, route] : prev.filter(r => r !== route);
-      
-      onAudioUpdate({ target: 'talkback', route: route, active: isActive });
-      
-      return newState;
+export function TalkbackMatrix({ onAudioUpdate }: TalkbackMatrixProps) {
+  const [activeRoutes, setActiveRoutes] = useState<Record<string, boolean>>({});
+
+  const handlePressIn = useCallback((route: string) => {
+    setActiveRoutes(prev => ({ ...prev, [route]: true }));
+    onAudioUpdate({
+      payload: { target: 'talkback', route, active: true }
     });
-  };
+  }, [onAudioUpdate]);
+
+  const handlePressOut = useCallback((route: string) => {
+    setActiveRoutes(prev => {
+      if (!prev[route]) return prev;
+      
+      onAudioUpdate({
+        payload: { target: 'talkback', route, active: false }
+      });
+      return { ...prev, [route]: false };
+    });
+  }, [onAudioUpdate]);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col flex-1">
-      
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-slate-800">Talkback Routing (Dein Mikrofon)</h2>
-        
-        <button className="bg-red-50 text-red-700 border-2 border-red-200 px-8 py-3 rounded-xl font-bold text-lg hover:bg-red-100 active:bg-red-200 transition-colors shadow-sm select-none">
-          TALK
-        </button>
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+        <span>🎙️</span> Talkback Matrix
+      </h2>
+      <div className="flex gap-4">
+        {DESTINATIONS.map(dest => (
+          <button
+            key={dest.id}
+            onPointerDown={() => handlePressIn(dest.id)}
+            onPointerUp={() => handlePressOut(dest.id)}
+            onPointerLeave={() => handlePressOut(dest.id)}
+            className={`flex-1 py-8 rounded-lg border-2 transition-all duration-75 select-none touch-none ${
+              activeRoutes[dest.id]
+                ? 'bg-indigo-50 border-indigo-300 text-indigo-900 shadow-inner scale-[0.98]'
+                : 'bg-slate-50 border-slate-200 text-slate-600 shadow hover:bg-slate-100'
+            }`}
+          >
+            <div className="text-xl font-bold">{dest.label}</div>
+            <div className="text-sm mt-2 opacity-70 font-medium">
+              {activeRoutes[dest.id] ? 'AUF SENDUNG' : 'Drücken & Halten'}
+            </div>
+          </button>
+        ))}
       </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <TalkbackButton 
-          label="Voice of God" 
-          isActive={activeRoutes.includes('vog')} 
-          onClick={() => toggleRoute('vog')} 
-        />
-        <TalkbackButton 
-          label="Raumklang" 
-          isActive={activeRoutes.includes('raum')} 
-          onClick={() => toggleRoute('raum')} 
-        />
-        <TalkbackButton 
-          label="TN 1" 
-          isActive={activeRoutes.includes('tn1')} 
-          onClick={() => toggleRoute('tn1')} 
-        />
-        <TalkbackButton 
-          label="TN 2" 
-          isActive={activeRoutes.includes('tn2')} 
-          onClick={() => toggleRoute('tn2')} 
-        />
-      </div>
-      
     </div>
   );
 }
