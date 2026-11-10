@@ -3,60 +3,37 @@
 Du agierst als Senior Fullstack Entwickler und Software-Architekt. Wir entwickeln eine lokale, offline-fähige Web-Anwendung zur Steuerung eines Behringer X32 Compact Mischpults in einem medizinischen Simulationszentrum.
 
 ## 1. TECH STACK & INFRASTRUKTUR
-* **Backend:** Node.js (übersetzt WebSockets in UDP/OSC-Befehle). Läuft auf headless Linux-Rechner. Express 5.0 liefert Frontend statisch auf Port 8080 aus.
-* **Frontend:** React (Vite), konfiguriert als PWA für Kiosk-Mode auf Tablets.
-* **Netzwerk & Komfort:** Isoliertes WLAN. Das Backend liest die eigene IP dynamisch aus und generiert beim Start einen ASCII-QR-Code im Terminal, damit Tablets ohne IP-Tippen sofort über die Kamera verbunden werden können.
-
-## 2. DESIGN: "MEDICAL GRADE WHITE"
-* **Optik:** Steril, hell, minimalistisch, hoher Kontrast. Keine klassischen Audio-Technik-Metaphern.
-* **Farben:** Hintergrund bg-slate-50, Panels bg-white, Text text-slate-800.
-
-## 3. AUDIO-ARCHITEKTUR & ROUTING
-Das System bedient 3 Instruktoren (Rollen) gleichzeitig.
-* **Monitoring-Mix:** Individuelle Lautstärke, Mute und "Software-Solo" für TN 1-8 und Raumklang auf dem *eigenen* IEM-Mixbus (Software-seitiges Muten aller anderen Kanäle in einer Schleife).
-* **Talkback-Matrix:** Schwanenhalsmikrofone werden per WebSocket-Event auf dedizierte Busse (VoG, Raum, TN) geroutet. Umsetzung als echtes Push-to-Talk (PTT) via Touch-Events (onPointerDown / onPointerUp / onPointerLeave).
-
-## 4. STRICT ARCHITECTURE RULES
-* **No God Objects:** Logik und UI strikt trennen.
-* **Local-First:** DSGVO-konform, keine CDNs, keine Cloud, keine Google Fonts.
-
-## 5. TAGEBUCH / AKTUELLER STATUS
-* Eintrag 1-17: Architektur, UI, WS/OSC-Backend, Appliance Mode (Express) und dynamische Host-IP etabliert.
-* Eintrag 18 (Routing-Vollendung): Software-Solo und Talkback-Routing vollständig im Backend implementiert. 
-* Eintrag 19 (Dev-Komfort): QR-Code Terminal-Ausgabe implementiert, um Tablets blitzschnell für Hardware-Tests einzubinden.
-* Eintrag 20 (Talkback UX): Push-to-Talk (PTT) für die Talkback-Matrix im Frontend (Touch-Events) und Backend implementiert.
-
-## 6. X32 OSC-MAPPING (FÜR DAS BACKEND)
-Das Backend sendet Befehle an folgende X32-Adressen (muss mit der physischen Pult-Szene synchron sein):
-* **Inputs:** /ch/01 bis /ch/08 (TN 1-8), /ch/09-10 (Raum L/R), /auxin/01 (Soundboard), /ch/14-16 (Instruktor Mics 1-3).
-* **Target Mixbusse (Pre-Fader):** /mix/01 bis 03 (IEM Instruktoren), /mix/13 (VoG), /mix/14 (Raum).
-# MISSION PROMPT & ARCHITECTURE: SimAudio OSC Controller
-
-Du agierst als Senior Fullstack Entwickler und Software-Architekt. Wir entwickeln eine lokale, offline-fähige Web-Anwendung zur Steuerung eines Behringer X32 Compact Mischpults in einem medizinischen Simulationszentrum.
-
-## 1. TECH STACK & INFRASTRUKTUR
 * **Backend:** Node.js (Express 5.0 + WebSockets). OSC via UDP.
-* **Frontend:** React (Vite), PWA-Kiosk-Mode.
-* **Netzwerk:** Dedizierter lokaler Router zwingend erforderlich (Vermeidung von Gast-WLAN "Client Isolation").
-* **Host-Modus:** Windows PC startet via `start-bensim.bat` (Automatischer React-Build, Backend-Start und Chrome im nativen `--app` Modus).
+* **Frontend:** React (Vite), PWA-Kiosk-Mode. Höchstens 100vh, kein vertikales Scrollen (Cockpit-Feeling).
+* **Netzwerk:** Dedizierter lokaler Router für ausfallsicheres, latenzfreies OSC-Routing. Windows-Host startet via `.bat` im App-Modus.
 
 ## 2. DESIGN: "MEDICAL GRADE WHITE"
-* **Optik:** Steril, hell, minimalistisch, hoher Kontrast. Keine klassischen Audio-Technik-Metaphern.
-* **Farben:** Hintergrund bg-slate-50, Panels bg-white, Text text-slate-800.
+* **Optik:** Steril, Bento-Grid, hohe Informationsdichte, kein Pixel Verschwendung.
+* **Farben:** Hintergrund bg-slate-50, Panels bg-white, Text text-slate-800, Akzente in Indigo und Amber.
 
-## 3. AUDIO-ARCHITEKTUR & ROUTING
-* **Monitoring-Mix:** 3 unabhängige IEM-Mixbusse. "Software-Solo" mutet iterativ alle Inaktiven.
-* **Talkback-Matrix:** Push-to-Talk (PTT) via Touch-Events (onPointerDown / onPointerUp / onPointerLeave) auf dedizierte Ziel-Busse.
+## 3. AUDIO-ARCHITEKTUR & ROUTING (DIE 3 ZONEN)
+Das UI teilt sich logisch in drei strikt getrennte Bereiche auf:
+
+* **Zone A: Monitoring (Mein In-Ear - 10 Inputs):** 
+  8x TN (Teilnehmer), 2x Raumklang (Raum L/R). 
+  Features pro Kanal: Fader, Mute, Software-Solo, beschriftbares digitales Kreppband ("Wer?").
+  
+* **Zone B: Raum-Beschallung (Master Outputs in den Raum - 4 Wege):** 
+  1x Voice of God (VoG), 1x Patient 1 (In-Ear Schauspieler 1), 1x Patient 2 (In-Ear Schauspieler 2), 1x Soundboard (Effekte/Alarme).
+  Features pro Kanal: Fader, Mute, beschriftbares digitales Kreppband zur flexiblen Zuweisung.
+
+* **Zone C: Talkback-Matrix (PTT):** 
+  Push-to-Talk Buttons (Touch-Events), die das Mikrofon des Instruktors dynamisch auf die 4 Wege aus Zone B routen.
 
 ## 4. STRICT ARCHITECTURE RULES
 * **No God Objects:** Logik und UI strikt trennen.
-* **Local-First:** DSGVO-konform, keine CDNs, keine Cloud.
+* **Local-First:** DSGVO-konform, Speichern der Kreppband-Beschriftungen (Scribble Strips) lokal im Browser via `localStorage`.
 
 ## 5. TAGEBUCH / AKTUELLER STATUS
-* Eintrag 1-20: Backend, PTT-Talkback, Software-Solo und Hardware-Mapping abgeschlossen. 
-* Eintrag 21 (Verbindungs-Stabilität): "Geist"-Fehler auf dem Startbildschirm behoben.
-* Eintrag 22 (Appliance-UX & Netzwerk): QR-Code und DEV-Modus (mit lokaler IP) nativ ins React-Start-UI integriert (Medical White Design). Start-Prozess via `.bat` komplett automatisiert. Fehlerquelle "Client Isolation" in Gast-WLANs identifiziert und durch dedizierten Sim-Router gelöst.
+* Eintrag 1-22: Backend, Appliance-Mode, Software-Solo, dynamischer QR-Code und Netzwerk-Routing (In-Ear vs. Raum-Ausgabe) definiert.
+* Eintrag 23 (UI-Konzept & Scribble Strips): Neues "Bento-Grid" Cockpit-Layout für alle Kanäle inklusive digitaler Beschriftungen konzipiert.
+* Eintrag 24 (UI-Implementierung): Zweigeteiltes Grid erfolgreich in Code gegossen. `MonitoringBoard.tsx` (Zone A) und `RoomControl.tsx` (Zone B & C) implementiert. `localStorage` merkt sich Rollen-Namen dauerhaft über Neustarts hinweg.
 
 ## 6. X32 OSC-MAPPING (FÜR DAS BACKEND)
-* **Inputs:** /ch/01 bis /ch/08 (TN 1-8), /ch/09-10 (Raum L/R), /auxin/01 (Soundboard), /ch/14-16 (Instruktor Mics 1-3).
-* **Target Mixbusse (Pre-Fader):** /mix/01 bis 03 (IEM Instruktoren), /mix/13 (VoG), /mix/14 (Raum).
+* **Inputs:** /ch/01 bis /ch/08 (TN 1-8), /ch/09-10 (Raum L/R), /ch/14-16 (Instruktor Mics 1-3). Aux In (Soundboard).
+* **Target Mixbusse:** 3 separate In-Ear Busse für Instruktoren, plus dedizierte Busse für VoG, Pat 1, Pat 2 und Raum-Sound.
