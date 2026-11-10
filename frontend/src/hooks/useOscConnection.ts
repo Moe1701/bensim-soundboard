@@ -1,55 +1,46 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { WS_URL } from '../utils/constants';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { InstructorRole } from '../types/audio';
 
-export function useOscConnection(role: InstructorRole) {
+export function useOscConnection(role: InstructorRole | null) {
   const [isConnected, setIsConnected] = useState(false);
-  // useRef speichert die WebSocket-Instanz, ohne Re-Renders auszulösen
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    // 1. Verbindung aufbauen
-    const ws = new WebSocket(WS_URL);
+    // DER FIX: Wenn noch keine Rolle ausgewählt wurde, brich hier sofort ab!
+    // Dadurch entsteht kein "Geist" mehr im Backend.
+    if (!role) {
+      return;
+    }
+
+    // Dynamische Host-Erkennung (Tablet verbindet sich mit der IP, die es im Browser aufgerufen hat)
+    const wsUrl = `ws://${window.location.hostname}:8080`;
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {
       setIsConnected(true);
-      console.log('✅ Mit Backend verbunden!');
-      
-      // 2. Sofort beim Backend anmelden und die Tablet-Rolle mitteilen
-      ws.send(JSON.stringify({
-        type: 'REGISTER_ROLE',
-        role: role
-      }));
+      // Sobald die Verbindung steht, melden wir uns beim Backend mit der Rolle an
+      ws.send(JSON.stringify({ type: 'REGISTER_ROLE', role }));
     };
 
     ws.onclose = () => {
       setIsConnected(false);
-      console.log('❌ Verbindung zum Backend getrennt.');
     };
 
-    ws.onerror = (error) => {
-      console.error('⚠️ WebSocket Fehler:', error);
-    };
-
-    // 3. Aufräumen, wenn die App geschlossen wird
+    // Cleanup: Wenn der Instruktor das Tablet sperrt oder die App schließt, trenne sauber.
     return () => {
-      ws.close();
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+        ws.close();
+      }
     };
-  }, [role]); // Der Hook reagiert, falls sich die Rolle jemals ändert
+  }, [role]);
 
-  // 4. Hilfsfunktion, um später Button-Klicks (Mute/Fader) ans Backend zu senden
-  const sendAudioUpdate = useCallback((payload: any) => {
+  const sendAudioUpdate = useCallback((update: any) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'AUDIO_UPDATE',
-        payload
-      }));
+      // Wir packen den Payload ein und senden ihn als AUDIO_UPDATE an den socketHandler.js
+      wsRef.current.send(JSON.stringify({ type: 'AUDIO_UPDATE', ...update }));
     }
   }, []);
 
-  return {
-    isConnected,
-    sendAudioUpdate
-  };
+  return { isConnected, sendAudioUpdate };
 }
