@@ -18,7 +18,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen w-screen bg-slate-100 text-slate-800 p-2 md:p-3 flex flex-col font-sans select-none overflow-hidden gap-3">
+    <div className="h-screen w-screen bg-slate-50 text-slate-800 p-2 md:p-3 flex flex-col font-sans select-none overflow-hidden gap-2">
       {/* Der Kopf-Bereich (Rolle, Status) */}
       <Header role={activeRole} isConnected={isConnected} />
 
