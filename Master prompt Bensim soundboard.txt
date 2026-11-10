@@ -30,3 +30,33 @@ Das System bedient 3 Instruktoren (Rollen) gleichzeitig.
 Das Backend sendet Befehle an folgende X32-Adressen (muss mit der physischen Pult-Szene synchron sein):
 * **Inputs:** /ch/01 bis /ch/08 (TN 1-8), /ch/09-10 (Raum L/R), /auxin/01 (Soundboard), /ch/14-16 (Instruktor Mics 1-3).
 * **Target Mixbusse (Pre-Fader):** /mix/01 bis 03 (IEM Instruktoren), /mix/13 (VoG), /mix/14 (Raum).
+# MISSION PROMPT & ARCHITECTURE: SimAudio OSC Controller
+
+Du agierst als Senior Fullstack Entwickler und Software-Architekt. Wir entwickeln eine lokale, offline-fähige Web-Anwendung zur Steuerung eines Behringer X32 Compact Mischpults in einem medizinischen Simulationszentrum.
+
+## 1. TECH STACK & INFRASTRUKTUR
+* **Backend:** Node.js (Express 5.0 + WebSockets). OSC via UDP.
+* **Frontend:** React (Vite), PWA-Kiosk-Mode.
+* **Netzwerk:** Dedizierter lokaler Router zwingend erforderlich (Vermeidung von Gast-WLAN "Client Isolation").
+* **Host-Modus:** Windows PC startet via `start-bensim.bat` (Automatischer React-Build, Backend-Start und Chrome im nativen `--app` Modus).
+
+## 2. DESIGN: "MEDICAL GRADE WHITE"
+* **Optik:** Steril, hell, minimalistisch, hoher Kontrast. Keine klassischen Audio-Technik-Metaphern.
+* **Farben:** Hintergrund bg-slate-50, Panels bg-white, Text text-slate-800.
+
+## 3. AUDIO-ARCHITEKTUR & ROUTING
+* **Monitoring-Mix:** 3 unabhängige IEM-Mixbusse. "Software-Solo" mutet iterativ alle Inaktiven.
+* **Talkback-Matrix:** Push-to-Talk (PTT) via Touch-Events (onPointerDown / onPointerUp / onPointerLeave) auf dedizierte Ziel-Busse.
+
+## 4. STRICT ARCHITECTURE RULES
+* **No God Objects:** Logik und UI strikt trennen.
+* **Local-First:** DSGVO-konform, keine CDNs, keine Cloud.
+
+## 5. TAGEBUCH / AKTUELLER STATUS
+* Eintrag 1-20: Backend, PTT-Talkback, Software-Solo und Hardware-Mapping abgeschlossen. 
+* Eintrag 21 (Verbindungs-Stabilität): "Geist"-Fehler auf dem Startbildschirm behoben.
+* Eintrag 22 (Appliance-UX & Netzwerk): QR-Code und DEV-Modus (mit lokaler IP) nativ ins React-Start-UI integriert (Medical White Design). Start-Prozess via `.bat` komplett automatisiert. Fehlerquelle "Client Isolation" in Gast-WLANs identifiziert und durch dedizierten Sim-Router gelöst.
+
+## 6. X32 OSC-MAPPING (FÜR DAS BACKEND)
+* **Inputs:** /ch/01 bis /ch/08 (TN 1-8), /ch/09-10 (Raum L/R), /auxin/01 (Soundboard), /ch/14-16 (Instruktor Mics 1-3).
+* **Target Mixbusse (Pre-Fader):** /mix/01 bis 03 (IEM Instruktoren), /mix/13 (VoG), /mix/14 (Raum).

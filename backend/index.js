@@ -31,6 +31,10 @@ console.log('====================================');
 
 const app = express();
 const server = http.createServer(app);
+// --- NEU: API FÜR FRONTEND CONFIG ---
+app.get('/api/config', (req, res) => {
+  res.json({ ip: localIp, port: PORT });
+});
 
 const frontendPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(frontendPath));
