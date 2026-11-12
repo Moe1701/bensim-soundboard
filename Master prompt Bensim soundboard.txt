@@ -4,26 +4,26 @@ Du agierst als Senior Fullstack Entwickler und Software-Architekt. Wir entwickel
 
 ## 1. TECH STACK & INFRASTRUKTUR
 * **Backend:** Node.js (Express 5.0 + WebSockets). OSC via UDP.
-* **Frontend:** React (Vite), PWA-Kiosk-Mode. Höchstens 100vh, kein vertikales Scrollen (Cockpit-Feeling).
-* **Netzwerk:** Dedizierter lokaler Router für ausfallsicheres, latenzfreies OSC-Routing. Windows-Host startet via `.bat` im App-Modus.
+* **Frontend:** React (Vite), manueller Vollbild-Modus (unterstützt iPad Split-Screen für Skripte). Höchstens 100vh, kein vertikales Scrollen (Cockpit-Feeling).
+* **Netzwerk & Appliance:** Dedizierter Linux-Rechner im Regie-Rack als abgeriegelte "Zero-Touch Appliance" (PM2 Prozess-Manager, deaktivierter Standby, feste IP, UFW-Firewall). Asymmetrischer Git-Workflow (Dev auf Windows, Read-Only auf Linux). Start-Automatisierung über ein intelligentes Zenity-Skript mit Smart-Builds und automatischem Vollbild-QR-Code.
 
 ## 2. DESIGN: "MEDICAL GRADE WHITE"
-* **Optik:** Steril, Bento-Grid, hohe Informationsdichte, kein Pixel Verschwendung.
-* **Farben:** Hintergrund bg-slate-50, Panels bg-white, Text text-slate-800, Akzente in Indigo und Amber.
+* **Optik:** Steril, Bento-Grid, hohe Informationsdichte, kein Pixel Verschwendung, kompakter Header ohne toten Whitespace.
+* **Farben:** Hintergrund bg-slate-50, Panels bg-white, Text text-slate-800. Kanal-Überschriften in starker Typografie (text-sm font-black). Zone B mit smaragdgrünen Akzenten, Zone C (Talkback) mit funktionsspezifischen Signalfarben (VoG = Violett, Pat 1 = Türkis/Grün, Pat 2 = Teal, Raum = Amber).
 
 ## 3. AUDIO-ARCHITEKTUR & ROUTING (DIE 3 ZONEN)
 Das UI teilt sich logisch in drei strikt getrennte Bereiche auf:
 
-* **Zone A: Monitoring (Mein In-Ear - 10 Inputs):** 
-  8x TN (Teilnehmer), 2x Raumklang (Raum L/R). 
-  Features pro Kanal: Fader, Mute, Software-Solo, beschriftbares digitales Kreppband ("Wer?").
+* **Zone A: Monitoring (Mein In-Ear - 10 Inputs + Master):** 
+  8x TN (Teilnehmer), 2x Raumklang (Raum L/R) plus separater Master-Fader für die Gesamtlautstärke des eigenen In-Ear-Busses. 
+  Features pro Kanal: Schlanke Line-Fader, Mute, Software-Solo, beschriftbares digitales Kreppband ("Wer?").
   
 * **Zone B: Raum-Beschallung (Master Outputs in den Raum - 4 Wege):** 
-  1x Voice of God (VoG), 1x Patient 1 (In-Ear Schauspieler 1), 1x Patient 2 (In-Ear Schauspieler 2), 1x Soundboard (Effekte/Alarme).
+  1x Voice of God (VoG), 1x Patient 1 (In-Ear Schauspieler 1), 1x Patient 2 (In-Ear Schauspieler 2), 1x Soundboard (Effekte/Alarme via Aux In / Direct-Cinch ins Pult).
   Features pro Kanal: Fader, Mute, beschriftbares digitales Kreppband zur flexiblen Zuweisung.
 
 * **Zone C: Talkback-Matrix (PTT):** 
-  Push-to-Talk Buttons (Touch-Events), die das Mikrofon des Instruktors dynamisch auf die 4 Wege aus Zone B routen.
+  Push-to-Talk Buttons (Touch-Events), die das Mikrofon des Instruktors dynamisch auf die 4 Wege aus Zone B routen (inklusive Video-Mix-Sync-Funktion zur Übertragung auf den Main-Mix für den SimObserver).
 
 ## 4. STRICT ARCHITECTURE RULES
 * **No God Objects:** Logik und UI strikt trennen.
@@ -33,13 +33,10 @@ Das UI teilt sich logisch in drei strikt getrennte Bereiche auf:
 * Eintrag 1-22: Backend, Appliance-Mode, Software-Solo, dynamischer QR-Code und Netzwerk-Routing (In-Ear vs. Raum-Ausgabe) definiert.
 * Eintrag 23 (UI-Konzept & Scribble Strips): Neues "Bento-Grid" Cockpit-Layout für alle Kanäle inklusive digitaler Beschriftungen konzipiert.
 * Eintrag 24 (UI-Implementierung): Zweigeteiltes Grid erfolgreich in Code gegossen. `MonitoringBoard.tsx` (Zone A) und `RoomControl.tsx` (Zone B & C) implementiert. `localStorage` merkt sich Rollen-Namen dauerhaft über Neustarts hinweg.
+* Eintrag 26 (UI/UX Refactoring & Hardware-Testing): Design-Update auf ein kompakteres "Medical Grade White" (reduzierter Whitespace, kleinere Gaps). Zone A nutzt nun elegante Line-Fader und massiv vergrößerte Kanal-Überschriften für blitzschnelle Lesbarkeit. Zone B ist durch smaragdgrüne Fader optisch getrennt. Zone C (Talkback) wurde mit funktionsspezifischen Signalfarben (VoG = Violett, Patienten = Türkis/Grün, Raum = Orange) für intuitive, blinde Bedienung ausgestattet.
+* Eintrag 27 (Flexible Kiosk-Architektur): Verzicht auf erzwungene PWA-Installation, um Split-Screen-Nutzung auf dem iPad (z. B. für PDF-Szenarioskripte parallel zum Soundboard) zu ermöglichen. Stattdessen einen manuellen Vollbild-Toggle-Button in den Header integriert. Backend-Testroutine (`test-routing.js`) komplettiert, sie testet nun vollumfänglich alle drei Architektur-Zonen (In-Ear Sends, Master Fader und PTT-Mutes) am physischen X32.
+* Eintrag 28 (Linux Appliance & Zero-Touch Deployment): Massiver Meilenstein erreicht. Der Linux-Rechner wurde zur vollautomatisierten Steuerzentrale fürs Rack konfiguriert[cite: 10]. Der fehleranfällige USB-Transfer wurde durch einen sauberen, asymmetrischen Git-SSH-Workflow abgelöst (Windows = Dev, Linux = Read-Only)[cite: 10]. Ein maßgeschneidertes Zenity-Startskript (`start-auswahl.sh`) übernimmt nun beim Booten vollautomatisch den Code-Pull, vergleicht Git-Hashes für effiziente Smart-Builds, regelt die strenge UFW-Firewall, setzt die Audiopegel und wirft den Instruktoren einen QR-Code für die Tablets im Vollbild an die Wand[cite: 10]. Der Laptop kann dank angepasster `logind.conf` einfach zugeklappt im Rack verschwinden[cite: 10].
 
 ## 6. X32 OSC-MAPPING (FÜR DAS BACKEND)
 * **Inputs:** /ch/01 bis /ch/08 (TN 1-8), /ch/09-10 (Raum L/R), /ch/14-16 (Instruktor Mics 1-3). Aux In (Soundboard).
 * **Target Mixbusse:** 3 separate In-Ear Busse für Instruktoren, plus dedizierte Busse für VoG, Pat 1, Pat 2 und Raum-Sound.
-Update für die Datei Master prompt Bensim soundboard.txt (Tagebuch)
-Füge diesen Absatz unten in Kapitel 5 (Tagebuch / Aktueller Status) hinzu:
-
-Eintrag 26 (UI/UX Refactoring & Hardware-Testing): Design-Update auf ein kompakteres "Medical Grade White" (angelehnt an das SimObserver-Layout). Whitespace durch reduziertes Padding und verschlankten Header minimiert. Zone A nutzt nun elegante Line-Fader und massiv vergrößerte Kanal-Überschriften für bessere Lesbarkeit. Zone B ist durch smaragdgrüne Fader optisch getrennt. Zone C (Talkback) wurde mit funktionsspezifischen Signalfarben (VoG = Violett, Patienten = Türkis/Grün, Raum = Orange) für intuitive, blinde Bedienung ausgestattet. Die Backend-Testroutine (test-routing.js) wurde komplettiert und testet nun vollumfänglich alle drei Architektur-Zonen (In-Ear Sends, Master Fader und PTT-Mutes) am physischen X32.
-* **Eintrag 26 (UI/UX Refactoring & Hardware-Testing):** Design-Update auf ein kompakteres "Medical Grade White" (reduzierter Whitespace, kleinere Gaps). Zone A nutzt nun elegante Line-Fader und massiv vergrößerte Kanal-Überschriften für blitzschnelle Lesbarkeit. Zone B ist durch smaragdgrüne Fader optisch getrennt. Zone C (Talkback) wurde mit funktionsspezifischen Signalfarben (VoG = Violett, Patienten = Türkis/Grün, Raum = Orange) für intuitive, blinde Bedienung ausgestattet.
-* **Eintrag 27 (Flexible Kiosk-Architektur):** Verzicht auf erzwungene PWA-Installation, um Split-Screen-Nutzung auf dem iPad (z. B. für PDF-Szenarioskripte parallel zum Soundboard) zu ermöglichen. Stattdessen einen manuellen Vollbild-Toggle-Button in den Header integriert. Backend-Testroutine (`test-routing.js`) komplettiert, sie testet nun vollumfänglich alle drei Architektur-Zonen (In-Ear Sends, Master Fader und PTT-Mutes) am physischen X32.

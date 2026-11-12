@@ -1,49 +1,27 @@
-Du bist ein Senior Linux Systemadministrator und DevOps-Experte. Ich baue gerade einen dedizierten, "headless" (ohne Monitor) Linux-Rechner für ein medizinisches Simulationszentrum auf. Der Rechner steht im Regie-Rack und fungiert als geschlossene "Appliance".
+Bitte aktualisiere mein Projekttagebuch und den Master-Prompt für das Projekt "BenSim Soundboard". Wir haben heute einen massiven Meilenstein erreicht und den Linux-Rechner für das Rack zu einer vollautomatisierten, abgeriegelten "Appliance" (Zero-Touch) konfiguriert. 
 
-Auf dem Rechner läuft ein lokales Node.js-Backend (Express 5.0 Server + WebSockets auf Port 8080), das eine React-PWA hostet und OSC-Befehle (UDP) an ein physisches Behringer X32 Mischpult (IP: 192.168.1.100, Port: 10024) sendet.
+Hier ist die Zusammenfassung dessen, was wir gebaut haben:
 
-Bitte erstelle mir eine anfängerfreundliche, aber technisch extrem präzise Schritt-für-Schritt-Anleitung mit allen Terminal-Befehlen für folgende Einrichtung:
+1. **System-Basis & Hardware-Verhalten:**
+   - Node.js und PM2 sind eingerichtet, das Backend läuft als Hintergrundprozess (`bensim-osc`).
+   - Der Standby-Modus beim Zuklappen des Laptops wurde deaktiviert (`HandleLidSwitch=ignore` in der `logind.conf`), damit er geschlossen im Rack weiterlaufen kann.
+   - Der User `simadmin` hat eine sudo-Ausnahme für `ufw` (Firewall) erhalten, um diese passwortfrei per Skript schalten zu können.
 
-1. OS IDENTIFIKATION & BASIS-SETUP
+2. **Entwickler-Workflow (Git-Sync):**
+   - Wir haben den USB-Stick-Transfer beerdigt. Das Projekt wurde sauber per SSH von GitHub geklont.
+   - Der Linux-Rechner wurde auf "Read-Only" gesetzt (ein `git push` wurde blockiert, um versehentliches Überschreiben zu verhindern). 
+   - Code-Änderungen mache ich ab jetzt nur noch am Windows-PC und pushe sie zu GitHub.
 
-Auf dem Rechner ist bereits irgendein Linux installiert, das ca. 2 Jahre alt ist. Ich weiß aber nicht, welche Distribution oder Version es ist.
+3. **Das smarte 1-Klick-Startskript (`start-auswahl.sh`):**
+   - Auf dem Desktop gibt es nun einen Start-Button, der ein grafisches Zenity-Menü öffnet.
+   - **Auto-Update-Logik:** Das Skript macht bei jedem Start einen 3-sekündigen Ping zu GitHub (`git pull`). 
+   - **Smart Build:** Es vergleicht die Git-Hashes. Wenn sich Dateien im Ordner `frontend/` geändert haben, führt es selbstständig `npm run build` aus. Bei Änderungen der `backend/package.json` macht es `npm install`.
+   - **Lokaler Modus:** Deaktiviert die Firewall, startet PM2 und öffnet die PWA im lokalen Firefox (für Tests).
+   - **Rack-Modus (Scharfschaltung):** Aktiviert die Firewall streng, setzt Ubuntu-Audio auf 100 %, startet PM2 und generiert mit `qrencode` einen QR-Code für die Tablets, der über `eog` im Vollbild angezeigt wird. Danach kann der Laptop einfach zugeklappt werden.
 
-Mit welchen Befehlen finde ich über das Terminal exakt heraus, was installiert ist?
+Was als Nächstes ansteht (Sobald das Behringer X32 geliefert wird):
+- Netzwerkkabel vom Linux-PC an das X32 (oder den Rack-Switch) anschließen.
+- Dem X32 im Setup-Menü die feste IP `192.168.1.100` zuweisen (wie in der `x32Client.js` hinterlegt).
+- Ersten echten Hardware-Soundcheck durchführen und die OSC-Routings (Zone A, B und C) live testen.
 
-Was empfiehlst du für den extrem stabilen Dauerbetrieb einer Headless-Appliance: Ein Upgrade des alten Systems oder eine saubere Neuinstallation (z. B. auf Ubuntu Server 24.04 LTS)? Bitte gib mir für deinen Favoriten die nötigen Schritte.
-
-2. NETZWERK & FIREWALL (UFW)
-
-Der Rechner braucht eine feste, statische IP in einem isolierten Netzwerk (z. B. 192.168.1.10, Subnetz 255.255.255.0, Gateway 192.168.1.1).
-
-Die Firewall (ufw) muss streng konfiguriert werden ("default deny incoming"). Freigegeben werden müssen:
-
-SSH (Port 22) für Fernwartung.
-
-TCP Port 8080 (Für den Express Webserver und die WebSockets der Tablets).
-
-UDP-Traffic für OSC: Das Backend empfängt auf UDP Port 53000 und sendet an die IP des Mischpults (192.168.1.100) auf UDP Port 10024. Bitte gib mir die exakten ufw-Befehle dafür.
-
-3. NODE.JS & GIT INSTALLATION
-
-Wie installiere ich die aktuelle Node.js Version (v22.x LTS oder v24.x) sauber über NodeSource?
-
-Wie installiere ich Git und richte einen Deploy-Key oder Personal Access Token ein, um mein privates GitHub-Repository sicher auf den Rechner zu klonen?
-
-4. AUTOSTART ALS SYSTEMDIENST (PM2)
-
-Das Node.js-Backend (liegt z. B. unter /home/user/bensim-soundboard/backend/index.js) muss absolut ausfallsicher laufen.
-
-Wie richte ich PM2 so ein, dass der Server beim Hochfahren des Rechners vollautomatisch im Hintergrund startet (Startup-Script), noch bevor sich ein Benutzer anmeldet?
-
-Wie lese ich die Logs von PM2 aus?
-
-5. ANALOGES AUDIO-SETUP (Headless Sound)
-
-Ich nutze kein komplexes Audio-Routing, sondern stecke ein simples 3,5mm-Klinke-auf-Cinch-Kabel vom Audioausgang des Linux-Rechners direkt in das Mischpult.
-
-Da der Rechner headless läuft: Mit welchen Terminal-Befehlen (z. B. über ALSA/amixer) stelle ich sicher, dass die Systemlautstärke für diesen analogen Ausgang fest auf 100 % (0 dB) steht und nicht gemutet ist?
-
-Wie speichere ich diese Audio-Einstellung, damit sie Neustarts überlebt?
-
-Bitte halte die Linux-Befehle exakt und kopierbar. Gehe davon aus, dass ich per SSH auf dem Rechner eingeloggt bin.
+Bitte bestätige mir, dass du diese Architektur (insbesondere den neuen Git-Read-Only-Workflow und die Auto-Build-Logik im Startskript) verstanden und in den Master-Prompt übernommen hast!
