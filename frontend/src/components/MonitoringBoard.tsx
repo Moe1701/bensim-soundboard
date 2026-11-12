@@ -22,6 +22,10 @@ export function MonitoringBoard({ onAudioUpdate }: MonitoringBoardProps) {
   const [muted, setMuted] = useState<Record<string, boolean>>({});
   const [solos, setSolos] = useState<Record<string, boolean>>({});
   const [labels, setLabels] = useState<Record<string, string>>({});
+  
+  // State für den neuen Master-Fader
+  const [masterVolume, setMasterVolume] = useState(75);
+  const [masterMuted, setMasterMuted] = useState(false);
 
   useEffect(() => {
     const savedLabels = localStorage.getItem('bensim_labels_inear');
@@ -70,18 +74,17 @@ export function MonitoringBoard({ onAudioUpdate }: MonitoringBoardProps) {
             }`}
           >
             <div className="w-full text-center mb-1 shrink-0">
-              {/* HIER VERGRÖSSERT: text-sm und font-black */}
               <div className="text-sm font-black text-slate-800 tracking-tight">{ch.label}</div>
               <input 
                 type="text" 
                 value={labels[ch.id] || ''}
                 onChange={(e) => handleLabelChange(ch.id, e.target.value)}
                 placeholder="Wer?" 
-                className="w-full text-[10px] text-center bg-white border border-slate-200 rounded mt-1 px-1 py-1 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 placeholder:text-slate-300 font-bold"
+                className="w-full text-[11px] text-center bg-white border border-slate-200 rounded mt-1 px-1 py-1 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 placeholder:text-slate-300 font-bold"
               />
             </div>
 
-            <div className="relative flex-1 w-full flex justify-center py-2 my-2 shrink min-h-[90px]">
+            <div className="relative flex-1 w-full flex justify-center py-2 shrink min-h-[90px]">
               <input
                 type="range"
                 min="0"
@@ -91,34 +94,34 @@ export function MonitoringBoard({ onAudioUpdate }: MonitoringBoardProps) {
                 className="absolute inset-0 h-full w-full opacity-0 cursor-pointer touch-none z-20"
                 style={{ writingMode: 'vertical-lr', direction: 'rtl' }}
               />
-              <div className="absolute w-1 h-full bg-slate-200 rounded-full z-0" />
+              <div className="absolute w-1.5 h-full bg-slate-200 rounded-full z-0" />
               <div 
-                className={`absolute bottom-0 w-1 rounded-full z-0 transition-colors ${muted[ch.id] ? 'bg-slate-300' : 'bg-blue-400'}`}
+                className={`absolute bottom-0 w-1.5 rounded-full z-0 transition-colors ${muted[ch.id] ? 'bg-slate-300' : 'bg-blue-400'}`}
                 style={{ height: `${volumes[ch.id] || 0}%` }}
               />
               <div 
-                className={`absolute w-6 h-3 bg-white border-2 rounded-full shadow-sm pointer-events-none transition-transform z-10 ${muted[ch.id] ? 'border-slate-300' : 'border-blue-500'}`}
+                className={`absolute w-7 h-4 bg-white border-2 rounded-full shadow-md pointer-events-none transition-transform z-10 ${muted[ch.id] ? 'border-slate-300' : 'border-blue-500'}`}
                 style={{ bottom: `${volumes[ch.id] || 0}%`, transform: 'translateY(50%)' }}
               />
             </div>
 
-            <div className="flex flex-col gap-1 w-full shrink-0">
+            <div className="flex flex-col gap-2 w-full shrink-0 mt-4">
               <button 
                 onClick={() => toggleMute(ch.id)}
-                className={`text-[9px] font-bold py-1 rounded border transition-colors ${
+                className={`text-[11px] font-bold py-2 rounded-lg border transition-colors ${
                   muted[ch.id] 
-                    ? 'bg-red-100 text-red-700 border-red-300' 
-                    : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100'
+                    ? 'bg-red-100 text-red-700 border-red-400 shadow-inner' 
+                    : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 MUTE
               </button>
               <button 
                 onClick={() => toggleSolo(ch.id)}
-                className={`text-[9px] font-bold py-1 rounded border transition-colors ${
+                className={`text-[11px] font-bold py-2 rounded-lg border transition-colors ${
                   solos[ch.id] 
-                    ? 'bg-amber-100 text-amber-700 border-amber-300' 
-                    : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100'
+                    ? 'bg-amber-100 text-amber-700 border-amber-400 shadow-inner' 
+                    : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 SOLO
@@ -126,6 +129,64 @@ export function MonitoringBoard({ onAudioUpdate }: MonitoringBoardProps) {
             </div>
           </div>
         ))}
+
+        {/* --- IN-EAR MASTER FADER (Ganz Rechts) --- */}
+        <div className="flex flex-col items-center bg-slate-100/80 border-2 border-slate-200 rounded-lg p-2 h-full ml-2 shadow-sm">
+          <div className="w-full text-center mb-1 shrink-0">
+            <div className="text-sm font-black text-slate-800 tracking-tight">MASTER</div>
+            <div className="w-full text-[11px] text-center bg-transparent mt-1 px-1 py-1 font-bold text-slate-400 uppercase">
+              Dein Ohr
+            </div>
+          </div>
+
+          <div className="relative flex-1 w-full flex justify-center py-2 shrink min-h-[90px]">
+            <input
+              type="range"
+              min="0" max="100"
+              value={masterVolume}
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                setMasterVolume(val);
+                onAudioUpdate({ payload: { target: 'inear_master', property: 'volume', value: val } });
+              }}
+              className="absolute inset-0 h-full w-full opacity-0 cursor-pointer touch-none z-20"
+              style={{ writingMode: 'vertical-lr', direction: 'rtl' }}
+            />
+            <div className="absolute w-2 h-full bg-slate-300 rounded-full z-0" />
+            <div 
+              className={`absolute bottom-0 w-2 rounded-full z-0 transition-colors ${masterMuted ? 'bg-slate-400' : 'bg-slate-700'}`}
+              style={{ height: `${masterVolume}%` }}
+            />
+            <div 
+              className={`absolute w-8 h-5 bg-white border-2 rounded-md shadow-md pointer-events-none transition-transform z-10 ${masterMuted ? 'border-slate-400' : 'border-slate-800'}`}
+              style={{ bottom: `${masterVolume}%`, transform: 'translateY(50%)' }}
+            >
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="w-4 h-0.5 bg-slate-400 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 w-full shrink-0 mt-4">
+            <button 
+              onClick={() => {
+                const newState = !masterMuted;
+                setMasterMuted(newState);
+                onAudioUpdate({ payload: { target: 'inear_master', property: 'mute', value: newState } });
+              }}
+              className={`text-[11px] font-bold py-2 rounded-lg border transition-colors ${
+                masterMuted 
+                  ? 'bg-red-500 text-white border-red-600 shadow-inner' 
+                  : 'bg-slate-800 border-slate-900 text-white hover:bg-slate-700'
+              }`}
+            >
+              MUTE
+            </button>
+            {/* Platzhalter-Box, damit das Grid unten abschließt wie bei den anderen */}
+            <div className="h-[29px] w-full"></div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

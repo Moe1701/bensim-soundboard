@@ -9,7 +9,7 @@ import { RoomControl } from './components/RoomControl';
 export default function App() {
   const [activeRole, setActiveRole] = useState<InstructorRole | null>(null);
 
-  const { isConnected, sendAudioUpdate } = useOscConnection(
+  const { isConnected, sendAudioUpdate, claimVideoMaster } = useOscConnection(
     activeRole as InstructorRole
   );
 
@@ -20,7 +20,7 @@ export default function App() {
   return (
     <div className="h-screen w-screen bg-slate-50 text-slate-800 p-2 md:p-3 flex flex-col font-sans select-none overflow-hidden gap-2">
       {/* Der Kopf-Bereich (Rolle, Status) */}
-      <Header role={activeRole} isConnected={isConnected} />
+      <Header role={activeRole} isConnected={isConnected} onClaimVideoMaster={claimVideoMaster} />
 
       {/* OBERE HÄLFTE: Zone A (In-Ear) */}
       <div className="flex-[3] min-h-0">

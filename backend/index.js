@@ -48,7 +48,8 @@ const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
   console.log('Neu: Tablet (oder Host) hat sich verbunden.');
-  setupWebSocket(ws, oscClient);
+  // HIER: wss als drittes Argument hinzugefügt, damit der Video-Master-Sync funktioniert
+  setupWebSocket(ws, oscClient, wss);
 });
 
 server.listen(PORT, '0.0.0.0', () => {

@@ -1,5 +1,6 @@
 // Speichert alle aktiven Verbindungen (welches Tablet hat welche Rolle)
 const connectedClients = new Map(); 
+let currentVideoMaster = null; // Speichert, welche Rolle gerade den Video-Mix diktiert
 
 // --- X32 ROUTING MAPS ---
 const ROLE_TO_BUS = {
@@ -30,12 +31,14 @@ const INSTRUCTOR_MICS = {
 };
 
 const TALKBACK_DESTINATIONS = {
-  'vog': '13',   // Mixbus 13
-  'room': '14',  // Mixbus 14
-  'tn': '15'     // Mixbus 15
+  'vog': '13',   // Mixbus 13 (Voice of God)
+  'room': '14',  // Mixbus 14 (Raumklang)
+  'pat1': '11',  // Mixbus 11 (In-Ear Patient 1)
+  'pat2': '12',  // Mixbus 12 (In-Ear Patient 2)
+  'tn': '15'     // Mixbus 15 (Alle TN - falls in Zukunft genutzt)
 };
 
-function setupWebSocket(ws, oscClient) {
+function setupWebSocket(ws, oscClient, wss) {
   ws.on('message', (message) => {
     try {
       const data = JSON.parse(message);
@@ -45,6 +48,18 @@ function setupWebSocket(ws, oscClient) {
         console.log(`✅ Registriert: ${data.role}. Aktive Tablets: ${connectedClients.size}`);
         return;
       }
+      
+      if (data.type === 'CLAIM_VIDEO_MASTER') {
+        currentVideoMaster = data.role;
+        console.log(`🎥 Video-Regie übernommen durch: ${data.role}`);
+        // Informiere alle Tablets, wer gerade Video-Master ist
+        wss.clients.forEach(client => {
+          if (client.readyState === 1) { // WebSocket.OPEN
+            client.send(JSON.stringify({ type: 'VIDEO_MASTER_UPDATE', masterRole: currentVideoMaster }));
+          }
+        });
+        return;
+      }
 
       if (data.type === 'AUDIO_UPDATE') {
         const role = connectedClients.get(ws);
@@ -52,7 +67,20 @@ function setupWebSocket(ws, oscClient) {
 
         const { target, id, property, value, route, active } = data.payload;
         
-        // -- ZONE A: MONITORING (IN-EARS) --
+        // -- ZONE A (MASTER): Gesamtlautstärke des In-Ear Busses --
+        if (target === 'inear_master') {
+          const targetBus = ROLE_TO_BUS[role];
+          if (!targetBus) return;
+          
+          if (property === 'volume') {
+            // Regelt den Bus-Masterfader (z.B. /bus/01/mix/fader)
+            oscClient.setFader(`/bus/${targetBus}/mix/fader`, value);
+          } else if (property === 'mute') {
+            oscClient.setMute(`/bus/${targetBus}/mix/on`, value);
+          }
+        }
+
+        // -- ZONE A (CHANNELS): MONITORING MIX --
         if (target === 'channel') {
           const targetBus = ROLE_TO_BUS[role];
           if (!targetBus) return;
@@ -61,10 +89,20 @@ function setupWebSocket(ws, oscClient) {
           if (!basePath) return;
 
           if (property === 'mute') {
+            // Mute im eigenen In-Ear Send
             oscClient.setMute(`${basePath}/mix/${targetBus}/on`, value);
+            // Wenn Video-Master, auch im Main-Mix muten
+            if (role === currentVideoMaster) {
+              oscClient.setMute(`${basePath}/mix/on`, value);
+            }
           } 
           else if (property === 'volume') {
+            // Fader für eigenen In-Ear Send
             oscClient.setFader(`${basePath}/mix/${targetBus}/level`, value);
+            // Wenn Video-Master, Fader-Bewegung auch auf den X32 Main-Fader spiegeln
+            if (role === currentVideoMaster) {
+              oscClient.setFader(`${basePath}/mix/fader`, value);
+            }
           }
           else if (property === 'solo') {
             console.log(`🎧 Solo-Modus [${role}] für ${id} -> ${value ? 'AN' : 'AUS'}`);

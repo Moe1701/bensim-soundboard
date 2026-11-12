@@ -9,8 +9,8 @@ let udpPort;
 
 function initOscClient() {
   udpPort = new osc.UDPPort({
-    localAddress: "0.0.0.0", // Lauscht auf allen lokalen Netzwerk-Adaptern
-    localPort: 53000,        // Freier Port auf unserem Linux-Backend
+    localAddress: "0.0.0.0", 
+    localPort: 0,            // <--- ÄNDERUNG: 0 wählt dynamisch einen freien Port
     remoteAddress: X32_IP,
     remotePort: X32_PORT,
     metadata: true
